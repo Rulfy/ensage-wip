@@ -1,62 +1,95 @@
 --[[
-		Save as self.lua into Ensage\Scripts\libs.
+		Save as TargetFind.lua into Ensage\Scripts\libs.
 
 		Functions:
-			targetFind:GetLastMouseOver(range): Returns the latest mouse-overed hero if it is in range, if not it will return closest hero to the mouse position.
-			targetFind:GetClosestToMouse(range): Returns closest hero to the mouse position that is in range.
+			targetFind:GetLastMouseOver([source,]range): Returns the latest mouse-overed hero in the range of your mouse position [and source.
+			targetFind:GetClosestToMouse([source,]range): Returns closest hero to the mouse position that is in range of your mouse position [and source.
 			targetFind:GetLowestEHP(range,type): Returns the hero by looking at their hp and resistances.
 				Type: Damage type. Possible inputs : "magic", "phys" and nothing
 					NoType: Compares purely by current HP
 					"phys": Comparation includes armor calculation and ignores ethereal heroes.
 					"magic": Comparation includes magic resistance calculation and ignores magic immune heroes.
 				Tresh: EHP Threshold. If entered function will only return a hero if it's EHP is lower than given amount
-				
 		Examples:
-			targetFind:GetLastMouseOver(1000) REMOVED FOR NOW
+			targetFind:GetLastMouseOver(1000)
 			targetFind:GetClosestToMouse(500)
 			targetFind:GetLowestEHP(600,"phys")
 			targetFind:GetLowestEHP(850,"magic")
 			targetFind:GetLowestEHP(99999,"magic",300)
 			targetFind:GetLowestEHP(1300)
 --]]
+
 require("libs.Utils")
+
 targetFind = {}
-function targetFind:GetClosestToMouse(range)
-	local player = entityList:GetMyHero()
-	if not player then
-		return
-	end
-	local enemyTeam = player:GetEnemyTeam()
+targetFind.mOverTable = {}
+targetFind.lastMOver = nil
+targetFind.i = 0
 
-	local result = nil
-	local bestDistance = nil
-	local mousePos = client.mousePosition
-
-	local enemies = entityList:FindEntities({type=LuaEntity.TYPE_HERO, team=enemyTeam, alive=true, visible=true, illusion=false})
-	for _,v in ipairs(enemies) do
-		local distance = v:GetDistance2D( mousePos )
-		if distance < range then
-			if not bestDistance or distance < bestDistance then
-				bestDistance = distance
-				result = v
-			end
+function targetFind:TargetTick(tick)
+	if PlayingGame() then
+		local mOver = entityList:GetMouseover()
+		if mOver and mOver.hero and mOver.visible and mOver.alive and mOver.team ~= entityList:GetMyHero().team and not mOver:IsIllusion() and (not self.lastMOver or self.lastMOver.handle ~= mOver.handle) then
+			self.lastMOver = mOver
+			self.mOverTable[mOver.handle] = self.i
+			self.i = self.i + 1
 		end
 	end
-	return result
 end
 
-function targetFind:GetLowestEHP(range,dmg_type,tresh)
-	local player = entityList:GetMyHero()
-	if not player then
-		return
+function targetFind:GetLastMouseOver(source,range)
+	local me = entityList:GetMyHero()
+	local enemyTeam = me:GetEnemyTeam()
+	local mousePos = client.mousePosition
+	if not range then 
+		range = source 
+		source = nil
 	end
-	local enemyTeam = player:GetEnemyTeam()
+	local enemies = entityList:FindEntities(function (v) return v.hero and v.alive and v.visible and not v:IsIllusion() and v.team == enemyTeam and (not source or v:GetDistance2D(source) < range) end)
+	table.sort( enemies, function (a,b) return self:GetMouseOverRank(a) > self:GetMouseOverRank(b) end )
+	if enemies[1] then
+		if self:GetMouseOverRank(enemies[1]) >= 0 then
+			return enemies[1]
+		else
+			return self.GetClosestToMouse(range)
+		end
+	end
+end
+
+function targetFind:GetMouseOverRank(ent)
+	local rank = self.mOverTable[ent.handle]
+	if rank then
+		return rank
+	else
+		return -1
+	end
+end
+
+function targetFind:GetClosestToMouse(source,range)
+	local me = entityList:GetMyHero()
+	local enemyTeam = me:GetEnemyTeam()
+	local mousePos = client.mousePosition
+	-- check if source is provided
+	if not range then 
+		range = source
+		source = nil
+	end
+	-- check mouse [and source range
+	local enemies = entityList:FindEntities(function (v) return v.hero and v.alive and v.visible and not v:IsIllusion() and v.team == enemyTeam and (not source or v:GetDistance2D(source) < range) end)
+	table.sort( enemies, function (a,b) return a:GetDistance2D(mousePos) < b:GetDistance2D(mousePos) end )
+	return enemies[1]
+end
+
+
+function targetFind:GetLowestEHP(range,dmg_type,tresh)
+	local me = entityList:GetMyHero()
+	local enemyTeam = me:GetEnemyTeam()
 
 	local result = nil
-	local enemies = entityList:FindEntities({type=TYPE_HERO, team = enemyTeam})
+	local enemies = entityList:FindEntities({type=LuaEntity.TYPE_HERO, team = enemyTeam})
 	for _,v in ipairs(enemies) do
 		if me:GetDistance2D(v) < range then
-			local immunity
+			local immunity,v_multipler,l_multipler = false,1,1
 			if dmg_type == "magic" then
 				if lowenemy then l_multipler = 1/(1-lowenemy.magicDmgResist) end
 				v_multipler = 1/(1-v.magicDmgResist)
@@ -80,3 +113,5 @@ function targetFind:GetLowestEHP(range,dmg_type,tresh)
 	end
 	return result
 end
+
+scriptEngine:RegisterLibEvent(EVENT_TICK,targetFind.TargetTick,targetFind)
