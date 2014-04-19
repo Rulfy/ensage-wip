@@ -2,14 +2,15 @@
 		Save as TargetFind.lua into Ensage\Scripts\libs.
 
 		Functions:
-			targetFind:GetLastMouseOver([source,]range): Returns the latest mouse-overed hero in the range of your mouse position [and source.
-			targetFind:GetClosestToMouse([source,]range): Returns closest hero to the mouse position that is in range of your mouse position [and source.
-			targetFind:GetLowestEHP(range,type): Returns the hero by looking at their hp and resistances.
-				Type: Damage type. Possible inputs : "magic", "phys" and nothing
-					NoType: Compares purely by current HP
-					"phys": Comparation includes armor calculation and ignores ethereal heroes.
-					"magic": Comparation includes magic resistance calculation and ignores magic immune heroes.
-				Tresh: EHP Threshold. If entered function will only return a hero if it's EHP is lower than given amount
+			targetFind:GetLastMouseOver([source,]range): 	Returns the latest mouse-overed hero in the range of your given source (default = me). 
+																Without parameters is will just return the last mouse-overed hero.
+			targetFind:GetClosestToMouse([source,]range): 	Returns closest hero to the mouse position that is in range of your mouse position [and source.
+			targetFind:GetLowestEHP(range,type): 			Returns the hero by looking at their hp and resistances.
+																Type: Damage type. Possible inputs : "magic", "phys" and nothing
+																NoType: Compares purely by current HP
+																"phys": Comparation includes armor calculation and ignores ethereal heroes.
+																"magic": Comparation includes magic resistance calculation and ignores magic immune heroes.
+																Tresh: EHP Threshold. If entered function will only return a hero if it's EHP is lower than given amount
 		Examples:
 			targetFind:GetLastMouseOver(1000)
 			targetFind:GetClosestToMouse(500)
@@ -40,10 +41,10 @@ end
 function targetFind:GetLastMouseOver(source,range)
 	local me = entityList:GetMyHero()
 	local enemyTeam = me:GetEnemyTeam()
-	local mousePos = client.mousePosition
-	if not range then 
-		range = source 
-		source = nil
+	-- check if at least one parameter ist set
+	if not range and source then 
+		range = source
+		source = me
 	end
 	local enemies = entityList:FindEntities(function (v) return v.hero and v.alive and v.visible and not v:IsIllusion() and v.team == enemyTeam and (not source or v:GetDistance2D(source) < range) end)
 	table.sort( enemies, function (a,b) return self:GetMouseOverRank(a) > self:GetMouseOverRank(b) end )
