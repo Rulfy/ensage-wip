@@ -24,6 +24,13 @@
 	====================================
 	|             Changelog            |
 	====================================
+		v1.3c
+		 - Fixed LuaEntityNPC:CanDie()
+		 - Hero name changed on classId for better performance
+		
+		v1.3b:
+		 - Added wisp overcharge in Damage Calculation
+		 
 		v1.3a:
 		 - Improved performance of several functions
 		 - Added LuaEntity:GetEnemyTeam()
@@ -353,6 +360,15 @@ utils.externalDmgReducs = {
 		type = 1,
 		reduce = .5,
 
+	},
+	
+	--Wisp: Overcharge
+	{
+		modifierName = "modifier_wisp_overcharge",
+		type = 1,
+		sourceTeam = 1,
+		sourceSpellName = "wisp_overcharge",
+		reduce = {.05,.10,.15,.20},
 	},
 
 	--Templar Assasin: Refraction
@@ -1437,7 +1453,7 @@ end
 
 --Returns if LuaEntity is ranged
 function LuaEntityNPC:IsRanged()
-	return self.attackType == LuaEntityNPC.ATTACK_RANGED and self.name ~= "Tiny"
+	return self.attackType == LuaEntityNPC.ATTACK_RANGED and self.classId ~= CDOTA_Unit_Hero_Tiny
 end
 
 --Returns if LuaEntity can die from the next instance of Damage
@@ -1458,7 +1474,7 @@ function LuaEntityNPC:CanReincarnate()
 		return true
 	end
 	local reincarnation = self:FindSpell("skeleton_king_reincarnation")
-	if reincarnation then
+	if reincarnation and reincarnation.cd == 0 and self.mana > 140 then
 		return true
 	end
 	return false
