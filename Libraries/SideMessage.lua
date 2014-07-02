@@ -109,25 +109,25 @@ end
 
  function sideMessage:Frame(tick)
  	if self.lastTick then
- 		local remove = {}
+ 		local saved = {}
 	 	for i,v in ipairs(self.objs) do
 	 		if v then
 	 			local span = GetTick() - v.createTick
 	 			if span < v.enterTime then
 	 				v:SetX(client.screenSize.x - (v.w-1)*span/v.enterTime)
+	 				table.insert(saved,v)
 	 			elseif span < v.enterTime + v.stayTime then
 	 				v:SetX(client.screenSize.x - v.w + 1)
+	 				table.insert(saved,v)
 	 			elseif span < v.enterTime + v.stayTime + v.exitTime then
 	 				v:SetX(client.screenSize.x - (v.w-1)*(v.enterTime + v.stayTime + v.exitTime - span)/v.exitTime)
+	 				table.insert(saved,v)
 	 			else
 	 				v:Destroy()
-	 				table.insert(remove,i)
 	 			end
 	 		end
 	 	end
-	 	for i,v in ipairs(remove) do
-	 		table.remove(self.objs,v)
-	 	end
+	 	self.objs = saved
 	end
 	self.lastTick = GetTick()
  end
