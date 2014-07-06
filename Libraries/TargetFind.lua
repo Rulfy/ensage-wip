@@ -114,7 +114,7 @@ function targetFind:GetLowestEHP(range,dmg_type,tresh)
 				immunity = false
 			end
 			local distance = GetDistance2D(me,v)
-			if distance <= range and v.alive and not v.illusion and v.visible and not immunity and (not tresh or (v.health*v_multipler) < tresh) then 
+			if distance <= range and v.alive and not v:IsIllusion() and v.visible and not immunity and (not tresh or (v.health*v_multipler) < tresh) then 
 				if not result or (result.health*l_multipler) > (v.health*v_multipler) then
 					result = v
 				end
