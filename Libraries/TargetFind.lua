@@ -42,6 +42,7 @@ function targetFind:TargetClose()
 	-- reset all saved entities to prevent crashes!
 	self.lastMOver = nil
 	self.mOverTable = {}
+	self.i = 0
 end
 
 function targetFind:GetLastMouseOver(source,range)
