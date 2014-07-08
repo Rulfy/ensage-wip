@@ -108,7 +108,7 @@
 
 --== SETTINGS ==--
 
-font = drawManager:CreateFont("11", "Arial", 14, 500)
+font = drawMgr:CreateFont("11", "Arial", 14, 500)
 
 TOP_MARGIN = 60
 SIDE_MARGIN = 10
