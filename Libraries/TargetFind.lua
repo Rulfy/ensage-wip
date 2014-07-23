@@ -11,6 +11,7 @@
 																				"phys": Comparation includes armor calculation and ignores ethereal heroes.
 																				"magic": Comparation includes magic resistance calculation and ignores magic immune heroes.
 																				Tresh: EHP Threshold. If entered function will only return a hero if it's EHP is lower than given amount
+			targetFind:GetHighestPercentHP(range,Magic Immune, Illusion) : Returns closest hero, within the specified range, that has the highest % Hp, If Magic Immune and Illusions return False, It won't target them, else it will)
 		Examples:
 			targetFind:GetLastMouseOver(1000)
 			targetFind:GetClosestToMouse(500)
@@ -18,6 +19,8 @@
 			targetFind:GetLowestEHP(850,"magic")
 			targetFind:GetLowestEHP(99999,"magic",300)
 			targetFind:GetLowestEHP(1300)
+			targetFind:GetHighestPercentHP(500)
+			targetFind:GetHighestPercentHP(500,0,0)
 --]]
 
 require("libs.Utils")
@@ -123,6 +126,29 @@ function targetFind:GetLowestEHP(range,dmg_type,tresh)
 			local distance = GetDistance2D(me,v)
 			if distance <= range and v.alive and not v:IsIllusion() and v.visible and not immunity and (not tresh or (v.health*v_multipler) < tresh) then 
 				if not result or (result.health*l_multipler) > (v.health*v_multipler) then
+					result = v
+				end
+			end
+		end
+	end
+	return result
+end
+
+function targetFind:GetHighestPercentHP(range,magicImmune,illusion)
+	local me = entityList:GetMyHero()
+	local enemyTeam = me:GetEnemyTeam()
+	if magicImmune == nil then
+		magicImmune = false
+	elseif illusion == nil then
+		illusion = false
+	end
+	local result = nil
+	local enemies = entityList:FindEntities({type=LuaEntity.TYPE_HERO, team = enemyTeam})
+	for _,v in ipairs(enemies) do
+		if me:GetDistance2D(v) < range then			
+			local distance = GetDistance2D(me,v)
+			if distance <= range and v.alive and v.visible and (illusion or not v:IsIllusion()) and (magicImmune or not v:IsMagicImmune()) then 
+				if not result or result.health/result.maxHealth < v.health/v.maxHealth then
 					result = v
 				end
 			end
