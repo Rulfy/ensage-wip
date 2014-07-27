@@ -24,7 +24,10 @@
 	====================================
 	|             Changelog            |
 	====================================
-		v1.3c
+		v1.3d:
+		 - Added Ancient Apparition's Ice Blast to Damage calculation
+		 
+		v1.3c:
 		 - Fixed LuaEntityNPC:CanDie()
 		 - Hero name changed on classId for better performance
 		
@@ -461,6 +464,7 @@ utils.externalDmgAmps = {
 		amp = .3,
 		type = DAMAGE_MAGC,
 	},
+	
 }
 
 utils.damageBlocks = {
@@ -1532,7 +1536,7 @@ function LuaEntityNPC:DamageTaken(dmg,dmgType,source)
 		if self:IsMagicDmgImmune() or self:IsInvul() then
 			tempDmg = 0
 		else
-			--Magic resistance calculation
+			--Magic resistance calculation				
 			tempDmg = tempDmg*(1 - self.magicDmgResist)
 		end
 
@@ -1784,6 +1788,25 @@ function LuaEntityNPC:DamageTaken(dmg,dmgType,source)
 					reduce = (1 + spell.level) * 0.04
 				end
 				tempDmg = tempDmg * (1 - reduce)
+			end
+		end
+		
+		--Exception External Damage Bonus: Ancient Apparition: Ice Blast
+		-- Damage Bonus depends on how much HP will entity have after damage is applied.
+		if self:DoesHaveModifier("modifier_ice_blast") then
+			--Find Ancient Apparition
+			for k,l in pairs(entityList:FindEntities({type = LuaEntity.TYPE_HERO})) do
+				if not l:IsIllusion() and l.team ~= self.team then
+					local spell = l:FindSpell("ancient_apparition_ice_blast")
+					--If he has spell
+					if spell then
+						local HPpercentage = {10,11,12}
+						local percent = self.maxHealth/100
+						if math.max((self.health - tempDmg), 0)/percent <= HPpercentage[spell.level] then
+							tempDmg = tempDmg + math.max((self.health - tempDmg), 0)
+						end
+					end
+				end
 			end
 		end
 	end
