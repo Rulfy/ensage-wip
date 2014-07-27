@@ -1794,8 +1794,8 @@ function LuaEntityNPC:DamageTaken(dmg,dmgType,source)
 		--Exception External Damage Bonus: Ancient Apparition: Ice Blast
 		-- Damage Bonus depends on how much HP will entity have after damage is applied.
 		if self:DoesHaveModifier("modifier_ice_blast") then
-			--Find Ancient Apparition
-			for k,l in pairs(entityList:FindEntities({type = LuaEntity.TYPE_HERO})) do
+			--Find spell owner(Ancient Apparition or Rubick)
+			for k,l in pairs(entityList:FindEntities({type = LuaEntity.TYPE_HERO, classId = {CDOTA_Unit_Hero_AncientApparition or CDOTA_Unit_Hero_Rubick}})) do
 				if not l:IsIllusion() and l.team ~= self.team then
 					local spell = l:FindSpell("ancient_apparition_ice_blast")
 					--If he has spell
