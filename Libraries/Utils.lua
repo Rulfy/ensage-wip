@@ -24,15 +24,18 @@
 	====================================
 	|             Changelog            |
 	====================================
-		v1.3d:
-		 - Added Ancient Apparition's Ice Blast to Damage calculation
-		 
-		v1.3c:
+		v1.3d
+		 - Fixed LuaEntityNPC:CanAttack(), LuaEntityNPC:SafeCastItem(), LuaEntityNPC:SafeCastAbility()	
+		 - Added Medusa: Mana Shield in Damage Calculation
+		 - Added AA: Ice Blast in Damage Calculation
+		 - Fixed minor bugs
+	
+		v1.3c
 		 - Fixed LuaEntityNPC:CanDie()
 		 - Hero name changed on classId for better performance
 		
 		v1.3b:
-		 - Added wisp overcharge in Damage Calculation
+		 - Added Wisp: Overcharge in Damage Calculation
 		 
 		v1.3a:
 		 - Improved performance of several functions
@@ -370,6 +373,7 @@ utils.externalDmgReducs = {
 		modifierName = "modifier_wisp_overcharge",
 		type = 1,
 		sourceTeam = 1,
+		sourseHero = CDOTA_Unit_Hero_Wisp,
 		sourceSpellName = "wisp_overcharge",
 		reduce = {.05,.10,.15,.20},
 	},
@@ -393,6 +397,7 @@ utils.externalDmgReducs = {
 		modifierName = "modifier_treant_living_armor",
 		type = 0,
 		sourceTeam = 1,
+		sourseHero = CDOTA_Unit_Hero_Treant,
 		sourceSpellName = "treant_living_armor",
 		reduce = {20,40,60,80},
 	},
@@ -402,6 +407,7 @@ utils.externalDmgReducs = {
 		modifierName = "modifier_abaddon_aphotic_shield",
 		type = 0,
 		sourceTeam = 1,
+		sourseHero = CDOTA_Unit_Hero_Treant,
 		sourceSpellName = "abaddon_aphotic_shield",
 		reduce = {110,140,170,200},
 	},
@@ -464,7 +470,6 @@ utils.externalDmgAmps = {
 		amp = .3,
 		type = DAMAGE_MAGC,
 	},
-	
 }
 
 utils.damageBlocks = {
@@ -654,6 +659,8 @@ utils.linkenBlocks = {
 	shadow_demon_disruption = true,
 	--Shadow Demon: Demonic Purge
 	shadow_demon_demonic_purge = true,
+	--Shadow Shaman: Ether Shock
+	shadow_shaman_ether_shock = true,
 	--Shadow Shaman: Hex
 	shadow_shaman_voodoo = true,
 	--Shadow Shaman: Shackles
@@ -774,9 +781,9 @@ utils.hiddenModifiers = {
 	--Lifestealer: Infest
 	modifier_life_stealer_infest = true,
 	--Phoenix: Supernova
-	modifier_ember_spirit_sleight_of_fist_caster = true,
+	modifier_phoenix_supernova_hiding = true,
 	--Ember Spirit: Sleight of Fist
-	-- PLACE HOLDER --
+	modifier_ember_spirit_sleight_of_fist_caster = true,
 	--Outworld Devourer: Astral Imprisonment
 	modifier_obsidian_destroyer_astral_imprisonment_prison = true,
 	--Shadow Demon: Disruption
@@ -911,7 +918,7 @@ end
 
 --Returns whether client is ingame.
 function IsIngame()
-	return client.connected and not client.loading
+	return client.connected and not client.loading and not client.console
 end
 
 --Returns if user is playing the game.
@@ -1142,7 +1149,7 @@ function LuaEntityNPC:SafeCastSpell(spellName,target,queue)
 	smartAssert(type(spellName) == "string", debug.getinfo(1, "n").name..": Invalid Spell Name")
 	local spell = self:FindSpell(spellName)
 	if type(target) == "boolean" then queue = target target = nil end
-	if spell and spell:CanBeCasted() and self:CanCast() and not (target and target.IsLinkensProtected and target:IsLinkensProtected() and spell:CanBeBlockedByLinkens() == true) then
+	if spell and spell:CanBeCasted() and self:CanCast() and not (target and target.team ~= self.team and target:IsLinkensProtected() and spell:CanBeBlockedByLinkens() == true) then
 		local prev = SelectUnit(self)
 		if not target then
 			if type(queue) == "boolean" then
@@ -1261,7 +1268,7 @@ function LuaEntityNPC:SafeCastItem(itemName,target,queue)
 	smartAssert(type(itemName) == "string", debug.getinfo(1, "n").name..": Invalid Item Name")
 	local item = self:FindItem(itemName)
 	if type(target) == "boolean" then queue = target target = nil end
-	if item and item:CanBeCasted() and self:CanUseItems() and not (x and x.IsLinkensProtected and x:IsLinkensProtected() and spell:CanBeBlockedByLinkens() == true) then
+	if item and item:CanBeCasted() and self:CanUseItems() and not (target and target.team ~= self.team and target:IsLinkensProtected() and spell:CanBeBlockedByLinkens() == true) then
 		local prev = SelectUnit(self)
 		if item:IsBehaviourType(LuaEntityAbility.BEHAVIOR_TOGGLE) then
 			if type(queue) == "boolean" then
@@ -1336,7 +1343,7 @@ end
 function LuaEntityNPC:SafeCastAbility(ability,target,queue)
 	smartAssert(GetType(ability) == "LuaEntity", debug.getinfo(1, "n").name..": Invalid Ability")
 	if type(target) == "boolean" then queue = target target = nil end
-	if ability and ability:CanBeCasted() and ((ability.item and self:CanUseItems()) or (not ability.item and self:CanCast())) and not (x and x.IsLinkensProtected and x:IsLinkensProtected() and ability:CanBeBlockedByLinkens() == true) then
+	if ability and ability:CanBeCasted() and ((ability.item and self:CanUseItems()) or (not ability.item and self:CanCast())) and not (target and target.team ~= self.team and target:IsLinkensProtected() and ability:CanBeBlockedByLinkens() == true) then
 		local prev = SelectUnit(self)
 		if not target then
 			if type(queue) == "boolean" then
@@ -1462,10 +1469,7 @@ end
 
 --Returns if LuaEntity can die from the next instance of Damage
 function LuaEntityNPC:CanDie()
-	if self:CanReincarnate() then
-		return false
-	end
-	if self:DoesHaveModifier("modifier_dazzle_shallow_grave") then
+	if self:CanReincarnate() or self:DoesHaveModifier("modifier_dazzle_shallow_grave") then
 		return false
 	end
 	return true
@@ -1478,7 +1482,7 @@ function LuaEntityNPC:CanReincarnate()
 		return true
 	end
 	local reincarnation = self:FindSpell("skeleton_king_reincarnation")
-	if reincarnation and reincarnation.cd == 0 and self.mana > 140 then
+	if reincarnation and reincarnation.level ~= 0 and reincarnation.cd == 0 and self.mana > 140 then
 		return true
 	end
 	return false
@@ -1498,100 +1502,10 @@ end
 --Returns the damage LuaEntity takes
 function LuaEntityNPC:DamageTaken(dmg,dmgType,source)
 	local tempDmg = dmg
-
-	--Physical Damage Calculation
-	if dmgType == DAMAGE_PHYS then
-		--Check if target gets physical damage
-		if self:IsPhysDmgImmune() or self:IsInvul() then
-			tempDmg = 0
-		else
-			--Check damage blocks before armor
-			for i,v in ipairs(utils.damageBlocks) do
-				if self:DoesHaveModifier(v.modifierName) then
-					local block
-					--Find block amount
-					if self:IsRanged() then
-						block = v.rangedBlock
-					else
-						block = v.meleeBlock
-					end
-					--If block amount is constant
-					if type(block) == "number" then
-						tempDmg = tempDmg - block
-					--Else locate block amount from level
-					else
-						temmpDmg = tempDmg - block[self:FindSpell(v.abilityName).level]
-					end
-					break
-				end
-			end
-
-			--Armor Calculation
-			tempDmg = tempDmg*(1 - self.dmgResist)
-		end
-
-	--Magical Damage Calculation
-	elseif dmgType == DAMAGE_MAGC then
-		--Check if target gets magical damage
-		if self:IsMagicDmgImmune() or self:IsInvul() then
-			tempDmg = 0
-		else
-			--Magic resistance calculation				
-			tempDmg = tempDmg*(1 - self.magicDmgResist)
-		end
-
-	--Pure Damage Calculation
-	elseif dmgType == DAMAGE_PURE then
-		--Check if target gets pure damage
-		if self:IsMagicImmune() or self:IsInvul() then
-			tempDmg = 0
-		end
-
-	--Composite Damage Calculation
-	elseif dmgType == DAMAGE_COMP then
-		--Check if target gets composite damage
-		if self:IsPhysDmgImmune() or self:IsInvul() then
-			tempDmg = 0
-		else
-			--Check damage blocks before armor and magic resistance
-			for i,v in ipairs(utils.damageBlocks) do
-				if self:DoesHaveModifier(v.modifierName) then
-					local block
-					--Find block amount
-					if self:IsRanged() then
-						block = v.rangedBlock
-					else
-						block = v.meleeBlock
-					end
-					--If block amount is constant
-					if type(block) == "number" then
-						tempDmg = tempDmg - block
-					--Else locate block amount from level
-					else
-						temmpDmg = tempDmg - block[self:FindSpell(v.abilityName).level]
-					end
-					break
-				end
-			end
-			--Armor and magic resistance calculation
-			tempDmg = tempDmg*(1 - self.dmgResist)*(1 - self.magicDmgResist)
-		end
-
-	--Universal Damage Calculation
-	elseif dmgType == DAMAGE_UNIV then
-		--Check if target gets universal damage
-		if (self:IsMagicDmgImmune() and not self:IsMagicImmune()) or self:IsInvul() then
-			tempDmg = 0
-		else
-			--Magic resistance calculation
-			tempDmg = tempDmg*(1 - self.magicDmgResist)
-		end
-	end
-
+	
 	--External Amplification and Reduction Calculation
 	--	HP removal cannot be reduced or amplified
 	if dmgType ~= DAMAGE_HPRM then
-
 		--External Amplify
 		for i,v in ipairs(utils.externalDmgAmps) do
 			--Does have modifer to calculate amplification
@@ -1791,39 +1705,134 @@ function LuaEntityNPC:DamageTaken(dmg,dmgType,source)
 			end
 		end
 		
+		--Exception External Reduction: Medusa: Mana Shield
+		--	Reduction is dynamic, depends on the current mana condition
+		if self:DoesHaveModifier("modifier_medusa_mana_shield") then
+			local spell = self:FindSpell("medusa_mana_shield")
+			--If has spell
+			if spell then
+				--Calculate
+				local reduce = 0
+				local threshold = spell:GetSpecialData("damage_per_mana")
+				if self.mana >= tempDmg*.5/threshold then
+					reduce = .5
+				else
+					reduce = self.mana*threshold/tempDmg
+				end
+				tempDmg = tempDmg * (1 - reduce)
+			end
+		end	
+		
 		--Exception External Damage Bonus: Ancient Apparition: Ice Blast
-		-- Damage Bonus depends on how much HP will entity have after damage is applied.
-		if self:DoesHaveModifier("modifier_ice_blast") then
-			--Find spell owner(Ancient Apparition or Rubick)
-			for k,l in pairs(entityList:FindEntities({type = LuaEntity.TYPE_HERO, classId = {CDOTA_Unit_Hero_AncientApparition or CDOTA_Unit_Hero_Rubick}})) do
-				if not l:IsIllusion() and l.team ~= self.team then
+		-- Damage Bonus depends on HP%.
+		if self:DoesHaveModifier("modifier_ice_blast") and not self:IsMagicDmgImmune() then
+			--Find owner
+			for k,l in pairs(entityList:FindEntities({type = LuaEntity.TYPE_HERO})) do
+				if not l.illusion and l.team ~= self.team then					
 					local spell = l:FindSpell("ancient_apparition_ice_blast")
 					--If he has spell
 					if spell then
-						local HPpercentage = {10,11,12}
-						local percent = self.maxHealth/100
-						if math.max((self.health - tempDmg), 0)/percent <= HPpercentage[spell.level] then
-							tempDmg = tempDmg + math.max((self.health - tempDmg), 0)
-						end
+						local threshold = spell:GetSpecialData("kill_pct")/100
+						tempDmg = tempDmg + threshold*self.maxHealth
+						break
 					end
 				end
 			end
 		end
+		
 	end
-	return tempDmg
-end
 
---Returns if LuaEntity is Invulnerable
---[[function LuaEntityNPC:IsInvul()
-	if self.modifierCount then
-		for i=1,self.modifierCount do
-			if utils.invulModifiers[self:GetModifierName(i)] or utils.hiddenModifiers[self:GetModifierName(i)] then
-				return true
+	--Physical Damage Calculation
+	if dmgType == DAMAGE_PHYS then
+		--Check if target gets physical damage
+		if self:IsPhysDmgImmune() or self:IsInvul() then
+			tempDmg = 0
+		else
+			--Check damage blocks before armor
+			for i,v in ipairs(utils.damageBlocks) do
+				if self:DoesHaveModifier(v.modifierName) then
+					local block
+					--Find block amount
+					if self:IsRanged() then
+						block = v.rangedBlock
+					else
+						block = v.meleeBlock
+					end
+					--If block amount is constant
+					if type(block) == "number" then
+						tempDmg = tempDmg - block
+					--Else locate block amount from level
+					else
+						temmpDmg = tempDmg - block[self:FindSpell(v.abilityName).level]
+					end
+					break
+				end
 			end
+			--Armor Calculation
+			tempDmg = tempDmg*(1 - self.dmgResist)
+		end
+
+	--Magical Damage Calculation
+	elseif dmgType == DAMAGE_MAGC then
+		--Check if target gets magical damage
+		if self:IsMagicDmgImmune() or self:IsInvul() then
+			tempDmg = 0
+		else
+			--Magic resistance calculation
+			tempDmg = tempDmg*(1 - self.magicDmgResist)
+		end
+
+	--Pure Damage Calculation
+	elseif dmgType == DAMAGE_PURE then
+		--Check if target gets pure damage
+		if self:IsMagicImmune() or self:IsInvul() then
+			tempDmg = 0
+		end
+
+	--Composite Damage Calculation
+	elseif dmgType == DAMAGE_COMP then
+		--Check if target gets composite damage
+		if self:IsPhysDmgImmune() or self:IsInvul() then
+			tempDmg = 0
+		else
+			--Check damage blocks before armor and magic resistance
+			for i,v in ipairs(utils.damageBlocks) do
+				if self:DoesHaveModifier(v.modifierName) then
+					local block
+					--Find block amount
+					if self:IsRanged() then
+						block = v.rangedBlock
+					else
+						block = v.meleeBlock
+					end
+					--If block amount is constant
+					if type(block) == "number" then
+						tempDmg = tempDmg - block
+					--Else locate block amount from level
+					else
+						temmpDmg = tempDmg - block[self:FindSpell(v.abilityName).level]
+					end
+					break
+				end
+			end
+			--Armor and magic resistance calculation
+			tempDmg = tempDmg*(1 - self.dmgResist)*(1 - self.magicDmgResist)
+		end
+
+	--Universal Damage Calculation
+	elseif dmgType == DAMAGE_UNIV then
+		--Check if target gets universal damage
+		if (self:IsMagicDmgImmune() and not self:IsMagicImmune()) or self:IsInvul() then
+			tempDmg = 0
+		else
+			--Magic resistance calculation
+			tempDmg = tempDmg*(1 - self.magicDmgResist)
 		end
 	end
-	return false
-end]]
+	
+	return tempDmg
+	
+end
 
 function LuaEntityNPC:FindRelativeAngle(pos)
 	smartAssert(GetType(pos) == "Vector" or GetType(pos) == "LuaEntity" or GetType(pos) == "Vector2D" or GetType(pos) == "Projectile", debug.getinfo(1, "n").name..": Invalid Parameter")
@@ -1897,7 +1906,7 @@ end
 
 --Returns if LuaEntity can attack.
 function LuaEntityNPC:CanAttack()
-	return not self.attackType == LuaEntityNPC.ATTACK_NONE and not self:IsDisarmed() and not self:IsStunned() and self.alive
+	return not (self.attackType == LuaEntityNPC.ATTACK_NONE and self:IsDisarmed() and self:IsStunned()) and self.alive
 end
 
 --Returns if LuaEntity can use items.
@@ -1962,15 +1971,10 @@ end
 function LuaEntityAbility:GetSpecialData(name,level)
 	smartAssert(type(name) == "string", "GetSpecialData: Invalid Name")
 	if not level then level = self.level end
-	if self.specialCount then
-		for i=1,self.specialCount do
-			if self:GetSpecial(i).name == name then
-				if self:GetSpecial(i).dataCount == 1 then
-					return self:GetSpecial(i):GetData(1)
-				else
-					return self:GetSpecial(i):GetData(level)
-				end
-			end
+	local specials = self.specials
+	for _,v in ipairs(specials) do
+		if v.name == name then
+			return v:GetData(math.min(v.dataCount,level))
 		end
 	end
 	return nil
