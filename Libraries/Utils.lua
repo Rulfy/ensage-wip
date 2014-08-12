@@ -24,6 +24,7 @@
 	====================================
 	|             Changelog            |
 	====================================
+	
 		v1.3d
 		 - Fixed LuaEntityNPC:CanAttack(), LuaEntityNPC:SafeCastItem(), LuaEntityNPC:SafeCastAbility()	
 		 - Added Medusa: Mana Shield in Damage Calculation
@@ -1146,7 +1147,7 @@ function LuaEntityNPC:SafeCastSpell(spellName,target,queue)
 	smartAssert(type(spellName) == "string", debug.getinfo(1, "n").name..": Invalid Spell Name")
 	local spell = self:FindSpell(spellName)
 	if type(target) == "boolean" then queue = target target = nil end
-	if spell and spell:CanBeCasted() and self:CanCast() and not (target and target.team ~= self.team and target:IsLinkensProtected() and spell:CanBeBlockedByLinkens() == true) then
+	if spell and spell:CanBeCasted() and self:CanCast() and not (target and target.type == LuaEntity.TYPE_HERO and target.team ~= self.team and target:IsLinkensProtected() and spell:CanBeBlockedByLinkens() == true) then
 		local prev = SelectUnit(self)
 		if not target then
 			if type(queue) == "boolean" then
@@ -1265,7 +1266,7 @@ function LuaEntityNPC:SafeCastItem(itemName,target,queue)
 	smartAssert(type(itemName) == "string", debug.getinfo(1, "n").name..": Invalid Item Name")
 	local item = self:FindItem(itemName)
 	if type(target) == "boolean" then queue = target target = nil end
-	if item and item:CanBeCasted() and self:CanUseItems() and not (target and target.team ~= self.team and target:IsLinkensProtected() and spell:CanBeBlockedByLinkens() == true) then
+	if item and item:CanBeCasted() and self:CanUseItems() and not (target and target.type == LuaEntity.TYPE_HERO and target.team ~= self.team and target:IsLinkensProtected() and spell:CanBeBlockedByLinkens() == true) then
 		local prev = SelectUnit(self)
 		if item:IsBehaviourType(LuaEntityAbility.BEHAVIOR_TOGGLE) then
 			if type(queue) == "boolean" then
@@ -1340,7 +1341,7 @@ end
 function LuaEntityNPC:SafeCastAbility(ability,target,queue)
 	smartAssert(GetType(ability) == "LuaEntity", debug.getinfo(1, "n").name..": Invalid Ability")
 	if type(target) == "boolean" then queue = target target = nil end
-	if ability and ability:CanBeCasted() and ((ability.item and self:CanUseItems()) or (not ability.item and self:CanCast())) and not (target and target.team ~= self.team and target:IsLinkensProtected() and ability:CanBeBlockedByLinkens() == true) then
+	if ability and ability:CanBeCasted() and ((ability.item and self:CanUseItems()) or (not ability.item and self:CanCast())) and not (target and target.type == LuaEntity.TYPE_HERO and target.team ~= self.team and target:IsLinkensProtected() and spell:CanBeBlockedByLinkens() == true) then
 		local prev = SelectUnit(self)
 		if not target then
 			if type(queue) == "boolean" then
