@@ -31,7 +31,7 @@
 		 - Fixed a bug on LuaEntityNPC:GetChanneledAbility().
 	
 		v1.3d:
-		 - Fixed LuaEntityNPC:CanAttack(), LuaEntityNPC:SafeCastItem(), LuaEntityNPC:aAbility()	
+		 - Fixed LuaEntityNPC:CanAttack(), LuaEntityNPC:SafeCastItem(), LuaEntityNPC:Ability()	
 		 - Added Medusa: Mana Shield in Damage Calculation
 		 - Added AA: Ice Blast in Damage Calculation
 		 - Fixed minor bugs
@@ -1454,7 +1454,7 @@ end
 
 --Returns if LuaEntity is protected by Linken's Sphere
 function LuaEntityNPC:IsLinkensProtected()
-	if self:DoesHaveModifier("modifier_item_sphere_target")
+	if self:DoesHaveModifier("modifier_item_sphere_target") then return true end
 	local linken = self:FindItem("item_sphere")
 	return linken and linken.cd == 0
 end
