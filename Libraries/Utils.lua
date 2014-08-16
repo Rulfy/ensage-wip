@@ -24,9 +24,14 @@
 	====================================
 	|             Changelog            |
 	====================================
+
+		v1.3e:
+		 - Added transfered linken detection to LuaEntityNPC:IsLinkensProtected().
+		 - Fixed LuaEntityNPC:CanUseItems() and LuaEntityNPC:CanCast() for Divided We Stand clones.
+		 - Fixed a bug on LuaEntityNPC:GetChanneledAbility().
 	
-		v1.3d
-		 - Fixed LuaEntityNPC:CanAttack(), LuaEntityNPC:SafeCastItem(), LuaEntityNPC:SafeCastAbility()	
+		v1.3d:
+		 - Fixed LuaEntityNPC:CanAttack(), LuaEntityNPC:SafeCastItem(), LuaEntityNPC:aAbility()	
 		 - Added Medusa: Mana Shield in Damage Calculation
 		 - Added AA: Ice Blast in Damage Calculation
 		 - Fixed minor bugs
@@ -1379,8 +1384,6 @@ end
 
 --Returns the LuaEntity of the spell if LuaEntity is currently channeling an ability.
 function LuaEntityNPC:GetChanneledAbility()
-	local items = self:GetAllItems()
-	local spells = self:GetAllSpells()
 	for i,v in ipairs(self.items) do
 		if v:IsBeingChanneled() then
 			return v
@@ -1451,6 +1454,7 @@ end
 
 --Returns if LuaEntity is protected by Linken's Sphere
 function LuaEntityNPC:IsLinkensProtected()
+	if self:DoesHaveModifier("modifier_item_sphere_target")
 	local linken = self:FindItem("item_sphere")
 	return linken and linken.cd == 0
 end
@@ -1899,7 +1903,7 @@ end
 
 --Returns if LuaEntity can cast spells.
 function LuaEntityNPC:CanCast()
-	return not self:IsSilenced() and not self:IsStunned() and self.alive and not self.illusion
+	return not self:IsSilenced() and not self:IsStunned() and self.alive and not self:IsIllusion()
 end
 
 --Returns if LuaEntity can attack.
@@ -1909,7 +1913,7 @@ end
 
 --Returns if LuaEntity can use items.
 function LuaEntityNPC:CanUseItems()
-	return not self:IsSilenced() and not self:IsStunned() and self.alive and not self.illusion
+	return not self:IsSilenced() and not self:IsStunned() and self.alive and not self:IsIllusion()
 end
 
 --Returns if LuaEntity can use items.
