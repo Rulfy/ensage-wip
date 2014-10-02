@@ -484,12 +484,6 @@ utils.externalDmgAmps = {
 		type = -1,
 	},
 
-	--Orchid Malevolence: Soul Burn
-	{
-		modifierName = "modifier_orchid_malevolence_debuff",
-		amp = .3,
-		type = DAMAGE_MAGC,
-	},
 }
 
 utils.damageBlocks = {
@@ -1309,7 +1303,7 @@ function LuaEntityNPC:SafeCastItem(itemName,target,queue)
 	smartAssert(type(itemName) == "string", debug.getinfo(1, "n").name..": Invalid Item Name")
 	local item = self:FindItem(itemName)
 	if type(target) == "boolean" then queue = target target = nil end
-	if item and item:CanBeCasted() and self:CanUseItems() and not (target and target.type == LuaEntity.TYPE_HERO and target.team ~= self.team and target:IsLinkensProtected() and spell:CanBeBlockedByLinkens() == true) then
+	if item and item:CanBeCasted() and self:CanUseItems() and not (target and target.type == LuaEntity.TYPE_HERO and target.team ~= self.team and target:IsLinkensProtected() and item:CanBeBlockedByLinkens() == true) then
 		local prev = SelectUnit(self)
 		if item:IsBehaviourType(LuaEntityAbility.BEHAVIOR_TOGGLE) then
 			if type(queue) == "boolean" then
@@ -1786,8 +1780,8 @@ function LuaEntityNPC:DamageTaken(dmg,dmgType,source,throughBKB)
 			--Calculate
 			local reduce = 0
 			local threshold = spell:GetSpecialData("damage_per_mana")
-			if self.mana >= tempDmg*.5/threshold then
-				reduce = .5
+			if self.mana >= tempDmg*.6/threshold then
+				reduce = .6
 			else
 				reduce = self.mana*threshold/tempDmg
 			end
@@ -1871,7 +1865,7 @@ end
 --Returns the particular flag at the LuaEntity's unitState.
 function LuaEntityNPC:IsUnitState(flag)
 	smartAssert(type(flag) == "number", "IsTargetTeam: Invalid Flag")
-	return HasFlag(self.unitState,flag/2) 
+	return HasFlag(self.unitState,math.ceil(flag/2))
 end
 
 function LuaEntityNPC:IsRooted()
