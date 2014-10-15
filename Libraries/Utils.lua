@@ -24,6 +24,10 @@
 	====================================
 	|             Changelog            |
 	====================================
+	
+		v1.4a
+		 - Rework for 6.82c
+		
 		
 		v1.4
 		 - Rework for 6.82
@@ -1569,9 +1573,14 @@ function LuaEntityNPC:DamageTaken(dmg,dmgType,source,throughBKB)
 							local spell = l:FindSpell(v.sourceSpellName)
 							if spell then
 								--Calculate amplification
-								amp = amp[spell.level]
-								--Break the loop, no further code is processed for enemy finding
-								break
+								if GetDistance2D(self,sourse) < 2200 then
+									amp = amp[spell.level]
+									break
+								else
+									amp = amp[spell.level]/2
+									break
+								end
+								--Break the loop, no further code is processed for enemy finding								
 							end
 						end
 					end
@@ -1736,7 +1745,7 @@ function LuaEntityNPC:DamageTaken(dmg,dmgType,source,throughBKB)
 	end
 	
 	--Exception External Amplify: Bloodseeker: Blood Rage
-	if source:DoesHaveModifier("modifier_bloodseeker_bloodrage") then
+	if source:DoesHaveModifier("modifier_bloodseeker_bloodrage") then		
 		--Find Blood Rage
 		for k,l in pairs(entityList:FindEntities({type = LuaEntity.TYPE_HERO})) do
 			if not l.illusion then
@@ -1744,6 +1753,9 @@ function LuaEntityNPC:DamageTaken(dmg,dmgType,source,throughBKB)
 				--If spell is found do the calculation amplify damage
 				if spell then
 					local bloodrite = {.25,.3,.35,.4}
+					if GetDistance2D(self,sourse) > 2200 then
+						bloodrite = {.125,.15,.175,.2}
+					end	
 					local amp = bloodrite[spell.level]
 					tempDmg = tempDmg * (1 + amp)
 					--Break the loop save time
@@ -1865,7 +1877,7 @@ end
 --Returns the particular flag at the LuaEntity's unitState.
 function LuaEntityNPC:IsUnitState(flag)
 	smartAssert(type(flag) == "number", "IsTargetTeam: Invalid Flag")
-	return HasFlag(self.unitState,math.ceil(flag/2))
+	return HasFlag(self.unitState,flag)
 end
 
 function LuaEntityNPC:IsRooted()
@@ -1873,7 +1885,7 @@ function LuaEntityNPC:IsRooted()
 end
 
 function LuaEntityNPC:IsDisarmed()
-	return self:IsUnitState(LuaEntityNPC.STATE_SOFT_DISARMED) or self:IsUnitState(LuaEntityNPC.STATE_DISARMED)
+	return self:IsUnitState(LuaEntityNPC.STATE_DISARMED)
 end
 
 function LuaEntityNPC:IsAttackImmune()
