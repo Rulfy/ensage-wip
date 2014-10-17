@@ -1494,7 +1494,7 @@ function LuaEntityNPC:IsLinkensProtected()
 		return true
 	else
 		local linken = self:FindItem("item_sphere")
-		return linken and linken.cd == 0 and self:DoesHaveModifier("modifier_item_sphere_target")
+		return linken and linken.cd == 0
 	end
 end
 
