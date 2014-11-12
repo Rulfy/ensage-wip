@@ -1,3 +1,4 @@
+require("libs.HeroInfo")
 --[[
  0 1 0 1 0 0 1 1    
  0 1 1 0 1 1 1 1        ____          __        __         
@@ -1868,10 +1869,41 @@ function LuaEntityNPC:DamageTaken(dmg,dmgType,source,throughBKB)
 	
 end
 
+function LuaEntityNPC:GetTurnTime(pos) --Returns time in seconds of how much entity need to turn to given position
+	smartAssert(GetType(pos) == "Vector" or GetType(pos) == "LuaEntity" or GetType(pos) == "Vector2D" or GetType(pos) == "Projectile", debug.getinfo(1, "n").name..": Invalid Parameter")
+	local turnrate = heroInfo[self.name].turnRate
+	if turnrate then
+		return (math.max(math.abs(FindAngleR(self) - math.rad(FindAngleBetween(self, pos))) - 0.69, 0)/(turnrate*(1/0.03)))
+	end
+end
+
 function LuaEntityNPC:FindRelativeAngle(pos)
 	smartAssert(GetType(pos) == "Vector" or GetType(pos) == "LuaEntity" or GetType(pos) == "Vector2D" or GetType(pos) == "Projectile", debug.getinfo(1, "n").name..": Invalid Parameter")
 	if not pos.x then pos = pos.position end
 	return ((math.atan2(pos.y-self.position.y,pos.x-self.position.x) - self.rotR + math.pi) % (2 * math.pi)) - math.pi
+end
+
+function FindAngleBetween(first, second)
+	if not first.x then first = first.position end if not second.x then second = second.position end
+	xAngle = math.deg(math.atan(math.abs(second.x - first.x)/math.abs(second.y - first.y)))
+	if first.x <= second.x and first.y >= second.y then
+		return 90 - xAngle
+	elseif first.x >= second.x and first.y >= second.y then
+		return xAngle + 90
+	elseif first.x >= second.x and first.y <= second.y then
+		return 270 - xAngle
+	elseif first.x <= second.x and first.y <= second.y then
+		return xAngle + 270
+	end
+	return nil
+end
+
+function FindAngleR(entity)
+	if entity.rotR < 0 then
+		return math.abs(entity.rotR)
+	else
+		return 2 * math.pi - entity.rotR
+	end
 end
 
 --Returns the particular flag at the LuaEntity's unitState.
@@ -2062,6 +2094,7 @@ utils.entityFuncs = {
 	{"DamageTaken",           "LuaEntityNPC"},
 	{"IsInvul",               "LuaEntityNPC"},
 	{"FindRelativeAngle",     "LuaEntityNPC"},
+	{"GetTurnTime",           "LuaEntityNPC"},
 	{"IsUnitState",           "LuaEntityNPC"},
 	{"IsRooted",              "LuaEntityNPC"},
 	{"IsDisarmed",            "LuaEntityNPC"},
