@@ -56,7 +56,7 @@ function SkillShot.__TrackTick(tick)
 	SkillShot.currentTick = tick
 	if tick >= SkillShot.lastTrackTick and Animations.maxCount > 0 then
 		SkillShot.__Track()
-		SkillShot.lastTrackTick = tick + Animations.maxCount
+		SkillShot.lastTrackTick = tick + Animations.maxCount/2
 	end
 	SkillShot.BlindPrediction()
 end
@@ -73,9 +73,11 @@ function SkillShot.__Track()
 		if SkillShot.trackTable[v.handle] and (not SkillShot.trackTable[v.handle].last or SkillShot.currentTick > SkillShot.trackTable[v.handle].last.tick) then
 			if SkillShot.trackTable[v.handle].last ~= nil then
 				local speed = (v.position - SkillShot.trackTable[v.handle].last.pos)/(SkillShot.currentTick - SkillShot.trackTable[v.handle].last.tick)
-				if not SkillShot.trackTable[v.handle].speed or GetDistance2D(speed,SkillShot.trackTable[v.handle].speed) > ((100/Animations.maxCount)/10) or speed == Vector(0,0,0) or (SkillShot.trackTable[v.handle].movespeed and v.movespeed ~= SkillShot.trackTable[v.handle].movespeed) then
+				if not SkillShot.trackTable[v.handle].speed or GetDistance2D(speed,SkillShot.trackTable[v.handle].speed) > ((100/(Animations.maxCount/2))/10) or speed == Vector(0,0,0) or (SkillShot.trackTable[v.handle].movespeed and v.movespeed ~= SkillShot.trackTable[v.handle].movespeed) 
+				or (SkillShot.trackTable[v.handle].rotR and SkillShot.trackTable[v.handle].rotR ~= v.rotR) then
 					SkillShot.trackTable[v.handle].speed = speed
 					SkillShot.trackTable[v.handle].movespeed = v.movespeed
+					SkillShot.trackTable[v.handle].rotR = v.rotR
 				end
 			end
 			SkillShot.trackTable[v.handle].last = {pos = v.position, tick = SkillShot.currentTick}
