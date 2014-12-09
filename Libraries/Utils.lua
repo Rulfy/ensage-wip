@@ -26,14 +26,15 @@ require("libs.HeroInfo")
 	|             Changelog            |
 	====================================
 	
+		v1.4b
+		 - Added Oracle: Fate's Edict to damage amplifications list.
+		
 		v1.4a
 		 - Rework for 6.82c
 		
-		
 		v1.4
 		 - Rework for 6.82
-		 
-		 
+		 		 
 		v1.3e:
 		 - Added transfered linken detection to LuaEntityNPC:IsLinkensProtected().
 		 - Fixed LuaEntityNPC:CanUseItems() and LuaEntityNPC:CanCast() for Divided We Stand clones.
@@ -471,6 +472,15 @@ utils.externalDmgAmps = {
 		modifierName = "modifier_chen_penitence",
 		sourceTeam = -1,
 		amp = {.14,.18,.22,.26},
+		sourceSpellName = "chen_penitence",
+		type = DAMAGE_PHYS,
+	},
+	
+	--Oracle: Fate's Edict
+	{
+		modifierName = "modifier_oracle_fates_edict",
+		sourceTeam = -1,
+		amp = .5
 		sourceSpellName = "chen_penitence",
 		type = DAMAGE_PHYS,
 	},
