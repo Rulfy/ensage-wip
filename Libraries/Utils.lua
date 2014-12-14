@@ -480,8 +480,8 @@ utils.externalDmgAmps = {
 	{
 		modifierName = "modifier_oracle_fates_edict",
 		sourceTeam = -1,
-		amp = .5
-		sourceSpellName = "chen_penitence",
+		amp = .5,
+		sourceSpellName = "oracle_fates_edict",
 		type = DAMAGE_PHYS,
 	},
 
