@@ -25,6 +25,8 @@ require("libs.HeroInfo")
 	====================================
 	|             Changelog            |
 	====================================
+		v1.4d
+		 - Fixed LuaEntityNPC:IsPhysDmgImmune()
 	
 		v1.4c
 		 - Rework Damage Calculations.
@@ -792,7 +794,7 @@ utils.immunity = {}
 --Modifiers that grant Physical Damage Immunity
 utils.immunity.phys = {
 	--Omniknight: Guardian Angel
-	modifier_omninight_guardian_angel
+	"modifier_omninight_guardian_angel"
 	--Winter Wyvern: Cold Embrace
 	-- PLACE HOLDER --
 }
@@ -801,7 +803,7 @@ utils.immunity.phys = {
 --Modifiers that grant Magical Damage Immunity
 utils.immunity.magic = {
 	--Medusa: Stone Gaze Petrify
-	modifier_medusa_stone_gaze_stone = true,
+	"modifier_medusa_stone_gaze_stone"
 }
 
 --Modifiers that cause hero to be hidden
@@ -1454,8 +1456,8 @@ end
 function LuaEntityNPC:IsMagicDmgImmune()
 	if self:IsMagicImmune() then
 		return true
-	else
-		for i,v in ipairs(utils.immunity.magic) do
+	else		
+		for i,v in ipairs(utils.immunity.magic) do	
 			if self:DoesHaveModifier(v) then
 				return true
 			end
@@ -1466,7 +1468,7 @@ end
 
 --Returns if LuaEntity is immune to Physical damage.
 function LuaEntityNPC:IsPhysDmgImmune()
-	if self.ghost then
+	if self:IsAttackImmune() then		
 		return true
 	else
 		for i,v in ipairs(utils.immunity.phys) do
