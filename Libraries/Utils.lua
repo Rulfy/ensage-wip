@@ -1883,10 +1883,24 @@ end
 
 function LuaEntityNPC:GetTurnTime(pos) --Returns time in seconds of how much entity need to turn to given position
 	smartAssert(GetType(pos) == "Vector" or GetType(pos) == "LuaEntity" or GetType(pos) == "Vector2D" or GetType(pos) == "Projectile", debug.getinfo(1, "n").name..": Invalid Parameter")
-	local turnrate = heroInfo[self.name].turnRate
-	if turnrate then
-		return (math.max(math.abs(FindAngleR(self) - math.rad(FindAngleBetween(self, pos))) - 0.69, 0)/(turnrate*(1/0.03)))
+	if self.classId and heroInfo[self.classId] then
+		local turnrate = heroInfo[self.classId].turnRate
+		if GetType(turnrate) == "table" then
+			if self.classId == CDOTA_BaseNPC_Creep_Lane then
+				if self:IsRanged() then
+					turnrate = turnrate[2]
+				else
+					turnrate = turnrate[1]
+				end
+			else 
+				turnrate = turnrate[self.level]
+			end
+		end
+		if turnrate then
+			return (math.max(math.abs(FindAngleR(self) - math.rad(FindAngleBetween(self, pos))) - 0.69, 0)/(turnrate*(1/0.03)))
+		end
 	end
+	return (math.max(math.abs(FindAngleR(self) - math.rad(FindAngleBetween(self, pos))) - 0.69, 0)/(0.5*(1/0.03)))
 end
 
 function LuaEntityNPC:FindRelativeAngle(pos)
@@ -2000,7 +2014,8 @@ end
 
 --Returns if LuaEntity can be casted.
 function LuaEntityAbility:CanBeCasted()
-	return self.state == LuaEntityAbility.STATE_READY
+	return self.cd == 0 and entityList:GetMyHero().mana >= self.manacost
+	--return self.state == LuaEntityAbility.STATE_READY
 end
 
 --Returns if LuaEntity can be blocked by Linken's Sphere.
