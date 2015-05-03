@@ -1930,19 +1930,8 @@ end
 
 function LuaEntityNPC:GetTurnTime(pos) --Returns time in seconds of how much entity need to turn to given position
 	smartAssert(GetType(pos) == "Vector" or GetType(pos) == "LuaEntity" or GetType(pos) == "Vector2D" or GetType(pos) == "Projectile", debug.getinfo(1, "n").name..": Invalid Parameter")
-	if self.classId and heroInfo[self.classId] then
-		local turnrate = heroInfo[self.classId].turnRate
-		if GetType(turnrate) == "table" then
-			if self.classId == CDOTA_BaseNPC_Creep_Lane then
-				if self:IsRanged() then
-					turnrate = turnrate[2]
-				else
-					turnrate = turnrate[1]
-				end
-			else 
-				turnrate = turnrate[self.level]
-			end
-		end
+	if self.name and heroInfo[self.name] then
+		local turnrate = heroInfo[self.name].turnRate
 		if turnrate then
 			return (math.max(math.abs(FindAngleR(self) - math.rad(FindAngleBetween(self, pos))) - 0.69, 0)/(turnrate*(1/0.03)))
 		end
@@ -1957,18 +1946,21 @@ function LuaEntityNPC:FindRelativeAngle(pos)
 end
 
 function FindAngleBetween(first, second)
+	smartAssert(GetType(first) == "LuaEntity" or GetType(first) == "Vector" or GetType(first) == "Vector2D" or GetType(first) == "Projectile", "GetTurnTime: Invalid First Parameter:"..GetType(first))
+	smartAssert(GetType(second) == "LuaEntity" or GetType(second) == "Vector" or GetType(second) == "Vector2D" or GetType(second) == "Projectile" or GetType(second) == "nil", "GetTurnTime: Invalid Second Parameter:"..GetType(second))
 	if not first.x then first = first.position end if not second.x then second = second.position end
 	xAngle = math.deg(math.atan(math.abs(second.x - first.x)/math.abs(second.y - first.y)))
-	if first.x <= second.x and first.y >= second.y then
-		return 90 - xAngle
-	elseif first.x >= second.x and first.y >= second.y then
-		return xAngle + 90
-	elseif first.x >= second.x and first.y <= second.y then
-		return 270 - xAngle
-	elseif first.x <= second.x and first.y <= second.y then
-		return xAngle + 270
+	if first and second then
+		if first.x <= second.x and first.y >= second.y then
+			return 90 - xAngle
+		elseif first.x >= second.x and first.y >= second.y then
+			return xAngle + 90
+		elseif first.x >= second.x and first.y <= second.y then
+			return 270 - xAngle
+		elseif first.x <= second.x and first.y <= second.y then
+			return xAngle + 270
+		end
 	end
-	return nil
 end
 
 function FindAngleR(entity)
