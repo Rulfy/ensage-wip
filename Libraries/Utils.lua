@@ -25,6 +25,18 @@ require("libs.HeroInfo")
 	====================================
 	|             Changelog            |
 	====================================
+		v1.5a
+	   	 - Full compliance with the new 6.84 patch
+
+		v1.5
+ 		
+		 - Rework dmg calculations:
+			*now it corrected calculate multi amplification/reduction dmg
+			*some improve performance
+			*change main formula 
+			"dmg = dmg(1-Amp)(1+Reduce)(1-self.Resist)" on
+			"dmg = ((dmg * (1-AmpPercentBefore) - AmpStaticBefore) * (1 + AmpPercentAfter - ReducePercentAfter) * (1 + ampFromOtherSource)) * (1 - self.Resist) - reduceAfterStatic + IceBlastPersent"
+	
 		v1.4d
 		 - Fixed LuaEntityNPC:IsPhysDmgImmune()
 	
@@ -378,6 +390,20 @@ utils.externalDmgReducs = {
 		reduce = {.1,.14,.18,.22},
 	},
 
+	--Nyx: Burrow
+	{
+		modifierName = "modifier_nyx_assassin_burrow",
+		type = 1,
+		reduce = .4,
+	},
+	
+	--Winter Wyvern: Curse
+	{
+		modifierName = "modifier_winter_wyvern_winters_curse",
+		type = 1,
+		reduce = .7,
+	},
+
 	--[[Kunkka: Ghost Ship
 	{
 		modifierName = "modifier_kunkka_ghost_ship_damage_absorb",
@@ -512,8 +538,8 @@ utils.damageBlocks = {
 	--Tidehunter: Kraken Shell
 	{
 		modifierName = "modifier_tidehunter_kraken_shell",
-		meleeBlock = {7,14,21,28},
-		rangedBlock = {7,14,21,28},
+		meleeBlock = {12,24,36,48},
+		rangedBlock = {12,24,36,48},
 		abilityName = "tidehunter_kraken_shell",
 	},
 	
@@ -794,9 +820,9 @@ utils.immunity = {}
 --Modifiers that grant Physical Damage Immunity
 utils.immunity.phys = {
 	--Omniknight: Guardian Angel
-	"modifier_omninight_guardian_angel"
+	"modifier_omninight_guardian_angel",
 	--Winter Wyvern: Cold Embrace
-	-- PLACE HOLDER --
+	"modifier_winter_wyvern_cold_embrace"
 }
 
 
@@ -1510,7 +1536,7 @@ end
 
 --Returns if LuaEntity can use Aghanim's Scepter upgrades
 function LuaEntityNPC:AghanimState()
-	return self:FindItem("item_ultimate_scepter")
+	return self:FindItem("item_ultimate_scepter") or self:DoesHaveModifier("modifier_item_ultimate_scepter_consumed")
 end
 
 --Returns if LuaEntity is ranged
@@ -1520,7 +1546,7 @@ end
 
 --Returns if LuaEntity can die from the next instance of Damage
 function LuaEntityNPC:CanDie()
-	if self:CanReincarnate() or self:DoesHaveModifier("modifier_dazzle_shallow_grave") then
+	if self:CanReincarnate() or self:DoesHaveModifier("modifier_dazzle_shallow_grave") or self:DoesHaveModifier("modifier_skeleton_king_reincarnation_scepter_active") or self:DoesHaveModifier("modifier_oracle_purifying_flames") then
 		return false
 	end
 	return true
@@ -1724,6 +1750,19 @@ function LuaEntityNPC:DamageTaken(dmg,dmgType,source,throughBKB)
 				reduceProc = reduceProc + burst
 			end
 		end
+	
+		--Exception External Reduction: Centaur: Stampede
+		if self:DoesHaveModifier("modifier_centaur_stampede") then
+			for k,l in pairs(entityList:FindEntities({type = LuaEntity.TYPE_HERO, team = self.team, illusion = false})) do
+				if l.classId == CDOTA_Unit_Hero_Centaur or l.classId ==  CDOTA_Unit_Hero_Rubick then
+					if l:AghanimState() then
+						reduceProc = reduceProc + 0.70
+						break
+					end
+				end
+			end
+		end
+
 		
 		--Exception External Reduction: Medusa: Mana Shield
 		--	Reduction is dynamic, depends on the current mana condition
@@ -1799,7 +1838,12 @@ function LuaEntityNPC:DamageTaken(dmg,dmgType,source,throughBKB)
 				end
 			end
 		end
-		
+	
+		--Exception External Reduction: Silver edge debuff
+		if source:DoesHaveModifier("modifier_silver_edge_debuff") then
+			ampFromME = ampFromME - 0.4
+		end
+
 		--Exception External Damage Bonus: Ancient Apparition: Ice Blast
 		-- Damage Bonus depends on HP%.
 		if self:DoesHaveModifier("modifier_ice_blast")then
@@ -1837,35 +1881,38 @@ function LuaEntityNPC:DamageTaken(dmg,dmgType,source,throughBKB)
 			if self:IsPhysDmgImmune() then
 				tempDmg = 0
 			else
-				if self:DoesHaveModifier("modifier_chen_penitence")then
-					for k,l in pairs(entityList:FindEntities({type = LuaEntity.TYPE_HERO,illusion = false})) do
-						if l.team ~= self.team and (l.classId == CDOTA_Unit_Hero_Chen or l.classId == CDOTA_Unit_Hero_Rubick) then
-							local spell = l:FindSpell("chen_penitence")
-							--If flesh golem is found do the calculation related to distance
-							if spell then
-								local penitence = {.14,.18,.22,.26}
-								amp = amp + penitence[spell.level]
+				if throughBKB == nil then
+					if self:DoesHaveModifier("modifier_chen_penitence")then
+						for k,l in pairs(entityList:FindEntities({type = LuaEntity.TYPE_HERO,illusion = false})) do
+							if l.team ~= self.team and (l.classId == CDOTA_Unit_Hero_Chen or l.classId == CDOTA_Unit_Hero_Rubick) then
+								local spell = l:FindSpell("chen_penitence")
+								--If flesh golem is found do the calculation related to distance
+								if spell then
+									local penitence = {.14,.18,.22,.26}
+									amp = amp + penitence[spell.level]
+									break
+								end
 							end
 						end
 					end
-				end
-				for i,v in ipairs(utils.damageBlocks) do
-					if self:DoesHaveModifier(v.modifierName) then
-						local block
-						--Find if target is ranged
-						if self:IsRanged() then
-							block = v.rangedBlock
-						else
-							block = v.meleeBlock
+					for i,v in ipairs(utils.damageBlocks) do
+						if self:DoesHaveModifier(v.modifierName) then
+							local block
+							--Find if target is ranged
+							if self:IsRanged() then
+								block = v.rangedBlock
+							else
+								block = v.meleeBlock
+							end
+							--If block is constant
+							if type(block) == "number" then
+								reduceBlock = block
+							--Else locate block from level
+							else
+								reduceBlock = block[self:FindSpell(v.abilityName).level]
+							end
+							break
 						end
-						--If block is constant
-						if type(block) == "number" then
-							reduceBlock = block
-						--Else locate block from level
-						else
-							reduceBlock = block[self:FindSpell(v.abilityName).level]
-						end
-						break
 					end
 				end
 				tempDmg = ((tempDmg * (1-ManaShield-reduceOther) - reduceBlock) * (1 + amp - reduceProc) * (1 + ampFromME)) * (1 - self.dmgResist) - reduceStatic + AA 
