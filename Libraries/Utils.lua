@@ -2053,8 +2053,8 @@ end
 
 --Returns if LuaEntity can be casted.
 function LuaEntityAbility:CanBeCasted()
-	return self.cd == 0 and entityList:GetMyHero().mana >= self.manacost
-	--return self.state == LuaEntityAbility.STATE_READY
+	--return self.cd == 0 and entityList:GetMyHero().mana >= self.manacost
+	return self.state == LuaEntityAbility.STATE_READY
 end
 
 --Returns if LuaEntity can be blocked by Linken's Sphere.
