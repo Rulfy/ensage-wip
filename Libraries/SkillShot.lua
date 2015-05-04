@@ -96,10 +96,10 @@ function SkillShot.PredictedXYZ(t,delay)
 	if SkillShot.isIdle(t) then return t.position
 	elseif SkillShot.trackTable[t.handle] and SkillShot.trackTable[t.handle].speed and (GetType(SkillShot.trackTable[t.handle].speed) == "Vector" or GetType(SkillShot.trackTable[t.handle].speed) == "Vector2D") and (SkillShot.trackTable[t.handle].speed ~= Vector(0,0,0) or t.activity ~= LuaEntityNPC.ACTIVITY_MOVE) then	
 		local pred = t.position + SkillShot.trackTable[t.handle].speed * delay
-		local pred2 = SkillShot.InFront(t,(delay/1000)*t.movespeed) + SkillShot.trackTable[t.handle].speed
+		local pred2 = SkillShot.InFront(t,(delay/1000)*t.movespeed)
 		local v = pred2
 		if pred and v then
-			if t.activity ~= LuaEntityNPC.ACTIVITY_MOVE or (GetDistance2D(pred,v) > Animations.maxCount) or SkillShot.AbilityMove(t) or not t:CanMove() then
+			if t.activity ~= LuaEntityNPC.ACTIVITY_MOVE or (GetDistance2D(pred,v) > GetDistance2D(t,v)) or SkillShot.AbilityMove(t) or not t:CanMove() then
 				v = pred
 			end
 		end
