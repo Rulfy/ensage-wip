@@ -893,18 +893,18 @@ end
 
 --Regular assert but if assert fails it traces the error
 --using a "pcall()" in case the assertion msg arguments are wrong.
-function smartAssert(condition, ...) 
-   if not condition then
-      if next({...}) then
-         local s,r = pcall(function (...) return(string.format(...)) end, ...)
-         if s then
-			print(debug.traceback())
-            error("assertion failed!: " .. r, 2)
-         end
-      end
-	  print(debug.traceback())
-      error("assertion failed!", 2)
-   end
+function smartAssert(condition, ...)
+	if not condition then
+		if next({...}) then
+			local s,r = pcall(function (...) return(string.format(...)) end, ...)
+			if s then
+				print(debug.traceback())
+            			error("assertion failed!: " .. r, 2)
+         		end
+      		end
+		print(debug.traceback())
+		error("assertion failed!", 2)
+	end
 end
 
 --Returns the 2D distance (ignoring height) between 2 units.
