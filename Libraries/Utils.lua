@@ -25,11 +25,11 @@ require("libs.HeroInfo")
 	====================================
 	|             Changelog            |
 	====================================
+		
 		v1.5a
 	   	 - Full compliance with the new 6.84 patch
 
 		v1.5
- 		
 		 - Rework dmg calculations:
 			*now it corrected calculate multi amplification/reduction dmg
 			*some improve performance
@@ -892,11 +892,19 @@ function GetCallerScript(index)
 end
 
 --Regular assert but if assert fails it traces the error
-function smartAssert(bool,string)
-	if not bool then
-    	print(debug.traceback())
-    	assert(bool,string)
-    end
+--using a "pcall()" in case the assertion msg arguments are wrong.
+function smartAssert(condition, ...) 
+   if not condition then
+      if next({...}) then
+         local s,r = pcall(function (...) return(string.format(...)) end, ...)
+         if s then
+			print(debug.traceback())
+            error("assertion failed!: " .. r, 2)
+         end
+      end
+	  print(debug.traceback())
+      error("assertion failed!", 2)
+   end
 end
 
 --Returns the 2D distance (ignoring height) between 2 units.
