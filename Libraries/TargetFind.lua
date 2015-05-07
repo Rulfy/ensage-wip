@@ -91,10 +91,10 @@ function targetFind:GetClosestToMouse(source,range,includeFriendly)
 	-- check mouse [and source range
 	local enemies 
 	if includeFriendly then
-		enemies = entityList:FindEntities(function (v) return v.hero and v.alive and v.visible and not v:IsIllusion() and (not source or v:GetDistance2D(source) < range) end)
+		enemies = entityList:FindEntities(function (v) return v.hero and v.alive and v.health > 0 and v.visible and not v:IsIllusion() and (not source or v:GetDistance2D(source) < range) end)
 	else
 		local enemyTeam = me:GetEnemyTeam()
-		enemies = entityList:FindEntities(function (v) return v.hero and v.alive and v.visible and not v:IsIllusion() and v.team == enemyTeam and (not source or v:GetDistance2D(source) < range) end)
+		enemies = entityList:FindEntities(function (v) return v.hero and v.alive and v.health > 0 and v.visible and not v:IsIllusion() and v.team == enemyTeam and (not source or v:GetDistance2D(source) < range) end)
 	end
 	table.sort( enemies, function (a,b) return a:GetDistance2D(mousePos) < b:GetDistance2D(mousePos) end )
 	return enemies[1]
@@ -106,7 +106,7 @@ function targetFind:GetLowestEHP(range,dmg_type,tresh)
 	local enemyTeam = me:GetEnemyTeam()
 
 	local result = nil
-	local enemies = entityList:FindEntities({type=LuaEntity.TYPE_HERO, team = enemyTeam})
+	local enemies = entityList:FindEntities({type=LuaEntity.TYPE_HERO, team = enemyTeam, alive = true})
 	for _,v in ipairs(enemies) do
 		if me:GetDistance2D(v) < range then
 			local immunity,v_multipler,l_multipler = false,1,1
@@ -124,7 +124,7 @@ function targetFind:GetLowestEHP(range,dmg_type,tresh)
 				immunity = false
 			end
 			local distance = GetDistance2D(me,v)
-			if distance <= range and v.alive and not v:IsIllusion() and v.visible and not immunity and (not tresh or (v.health*v_multipler) < tresh) then 
+			if distance <= range and v.alive and not v:IsIllusion() and v.visible and v.health > 0 and not immunity and (not tresh or (v.health*v_multipler) < tresh) then 
 				if not result or (result.health*l_multipler) > (v.health*v_multipler) then
 					result = v
 				end
