@@ -2010,7 +2010,7 @@ function LuaEntityNPC:IsStunned()
 end
 
 function LuaEntityNPC:IsHexed()
-	return self:IsUnitState(LuaEntityNPC.STATE_HEXED)
+	return self:DoesHaveModifier("modifier_sheepstick_debuff") or self:DoesHaveModifier("modifier_shadow_shaman_voodoo") or self:DoesHaveModifier("modifier_lion_voodoo")
 end
 
 function LuaEntityNPC:IsInvisible()
