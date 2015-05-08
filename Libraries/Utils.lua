@@ -1428,7 +1428,13 @@ function LuaEntityNPC:SafeCastAbility(ability,target,queue)
 	if type(target) == "boolean" then queue = target target = nil end
 	if ability and ability:CanBeCasted() and ((ability.item and self:CanUseItems()) or (not ability.item and self:CanCast())) and not (target and target.type == LuaEntity.TYPE_HERO and target.team ~= self.team and target:IsLinkensProtected() and ability:CanBeBlockedByLinkens() == true) then
 		local prev = SelectUnit(self)
-		if not target then
+		if ability:IsBehaviourType(LuaEntityAbility.BEHAVIOR_TOGGLE) then
+			if type(queue) == "boolean" then
+				entityList:GetMyPlayer():ToggleAbility(ability,queue)
+			else
+				entityList:GetMyPlayer():ToggleAbility(ability)
+			end
+		elseif not target then
 			if type(queue) == "boolean" then
 				entityList:GetMyPlayer():UseAbility(ability,queue)
 			else
