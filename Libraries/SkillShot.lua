@@ -111,7 +111,7 @@ end
 function SkillShot.SkillShotXYZ(source,t,delay,speed)	
 	if SkillShot.isIdle(t) then return t.position
 	elseif source and t then
-		local sourcepos = source.position
+		local sourcepos = source.position or source
 		local prediction = SkillShot.PredictedXYZ(t,delay)
 		if prediction and sourcepos and (GetType(sourcepos) == "Vector" or GetType(sourcepos) == "Vector2D") and delay and SkillShot.trackTable[t.handle] and SkillShot.trackTable[t.handle].speed then 
 			prediction = prediction - sourcepos
