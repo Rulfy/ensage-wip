@@ -177,7 +177,7 @@ function SkillShot.BlockableSkillShotXYZ(source,t,speed,delay,aoe,team)
 		team = false
 	end
 	local pred = SkillShot.SkillShotXYZ(source,t,delay,speed)
-	if pred and (GetType(pred) == "Vector" or GetType(pred) == "Vector2D") and not SkillShot.__GetBlock(source.position,pred,t,aoe,team) then
+	if pred and (GetType(pred) == "Vector" or GetType(pred) == "Vector2D") and not SkillShot.__GetBlock(source.position or source,pred,t,aoe,team) then
 		return pred
 	end
 end
