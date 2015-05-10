@@ -2032,7 +2032,9 @@ function LuaEntityNPC:IsInvul()
 end
 
 function LuaEntityNPC:IsMagicImmune()
-	return self:IsUnitState(LuaEntityNPC.STATE_MAGIC_IMMUNE)
+	return self:DoesHaveModifier("modifier_magicimmune") or self:DoesHaveModifier("modifier_magic_immune") or self:DoesHaveModifier("modifier_black_king_bar_immune") or self:DoesHaveModifier("modifier_juggernaut_blade_fury") or self:DoesHaveModifier("modifier_omniknight_repel") or
+	self:DoesHaveModifier("modifier_huskar_life_break_charge") or self:DoesHaveModifier("modifier_juggernaut_omnislash_invulnerability") or self:DoesHaveModifier("modifier_life_stealer_rage") 
+	--return self:IsUnitState(LuaEntityNPC.STATE_MAGIC_IMMUNE)
 end
 
 function LuaEntityNPC:IsFlying()
