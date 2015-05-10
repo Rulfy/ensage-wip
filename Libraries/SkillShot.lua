@@ -99,7 +99,7 @@ function SkillShot.PredictedXYZ(t,delay)
 		local pred2 = SkillShot.InFront(t,(delay/1000)*t.movespeed)
 		local v = pred2
 		if pred and v then
-			if t.activity ~= LuaEntityNPC.ACTIVITY_MOVE or (GetDistance2D(pred,v) > GetDistance2D(t,v)) or SkillShot.AbilityMove(t) or not t:CanMove() then
+			if t.activity ~= LuaEntityNPC.ACTIVITY_MOVE or (GetDistance2D(pred,v) > GetDistance2D(t,v)) or SkillShot.AbilityMove(t) or (not t:CanMove() and not t:DoesHaveModifier("modifier_invoker_cold_snap_freeze") then
 				v = pred
 			end
 		end
