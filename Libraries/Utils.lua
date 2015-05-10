@@ -2020,7 +2020,11 @@ function LuaEntityNPC:IsHexed()
 end
 
 function LuaEntityNPC:IsInvisible()
-	return self:IsUnitState(LuaEntityNPC.STATE_INVISIBLE)
+	--return self:IsUnitState(LuaEntityNPC.STATE_INVISIBLE)
+	return self:DoesHaveModifier("modifier_invisible") or self:DoesHaveModifier("modifier_item_invisibility_edge_windwalk") or self:DoesHaveModifier("modifier_lycan_summon_wolves_invisibility") or self:DoesHaveModifier("modifier_persistent_invisibility") 
+	or self:DoesHaveModifier("modifier_phantom_lancer_doppelwalk_invis") or self:DoesHaveModifier("modifier_riki_permanent_invisibility") or self:DoesHaveModifier("modifier_rune_invis") or self:DoesHaveModifier("modifier_sandking_sand_storm_invis") 
+	or self:DoesHaveModifier("modifier_invoker_ghost_walk") or self:DoesHaveModifier("modifier_bounty_hunter_wind_walk") or self:DoesHaveModifier("modifier_brewmaster_storm_wind_walk") or self:DoesHaveModifier("modifier_brewmaster_wind_walk") 
+	or self:DoesHaveModifier("modifier_clinkz_wind_walk") or self:DoesHaveModifier("modifier_broodmother_spin_web_invisible_applier")
 end
 
 function LuaEntityNPC:IsInvul()
