@@ -26,6 +26,9 @@ require("libs.HeroInfo")
 	|             Changelog            |
 	====================================
 		
+		v1.5b
+		 - Added modifier "ursa_unrage" in dmg calculator
+		
 		v1.5a
 	   	 - Full compliance with the new 6.84 patch
 
@@ -402,6 +405,14 @@ utils.externalDmgReducs = {
 		modifierName = "modifier_winter_wyvern_winters_curse",
 		type = 1,
 		reduce = .7,
+	},
+
+	
+	--Ursa: Enrage
+	{
+		modifierName = "modifier_ursa_enrage",
+		type = 1,
+		reduce = .8,
 	},
 
 	--[[Kunkka: Ghost Ship
