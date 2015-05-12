@@ -27,7 +27,7 @@ require("libs.HeroInfo")
 	====================================
 		
 		v1.5b
-		 - Added modifier "ursa_unrage" in dmg calculator
+		 - Added modifier "ursa_enrage" in dmg calculator
 		
 		v1.5a
 	   	 - Full compliance with the new 6.84 patch
@@ -2023,7 +2023,11 @@ function LuaEntityNPC:IsMuted()
 end
 
 function LuaEntityNPC:IsStunned()
-	return self:IsUnitState(LuaEntityNPC.STATE_STUNNED)
+	--return self:IsUnitState(LuaEntityNPC.STATE_STUNNED)
+	return self:DoesHaveModifier("modifier_stun") or self:DoesHaveModifier("modifier_stunned") or self:DoesHaveModifier("modifier_techies_stasis_trap_stunned") or self:DoesHaveModifier("modifier_tiny_avalanche_stun") 
+	or self:DoesHaveModifier("modifier_crystal_maiden_frostbite_ministun") or self:DoesHaveModifier("modifier_earthshaker_fissure_stun") or self:DoesHaveModifier("modifier_faceless_void_time_lock_stun") or self:DoesHaveModifier("modifier_jakiro_ice_path_stun") 
+	or self:DoesHaveModifier("modifier_keeper_of_the_light_mana_leak_stun") or self:DoesHaveModifier("modifier_rubick_telekinesis_stun") or self:DoesHaveModifier("modifier_lina_light_strike_array") or self:DoesHaveModifier("modifier_kunkka_torrent") 
+	or self:DoesHaveModifier("modifier_lion_impale") or self:DoesHaveModifier("modifier_knockback")
 end
 
 function LuaEntityNPC:IsHexed()
