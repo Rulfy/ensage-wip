@@ -52,27 +52,26 @@ SkillShot.BlindPredictionTable = {}
 SkillShot.lastTrackTick = 0
 SkillShot.currentTick = 0
 
-function SkillShot.__TrackTick(tick)
+function SkillShot.__TrackTick()
+	local tick = GetTick()
 	SkillShot.currentTick = tick
-	if tick >= SkillShot.lastTrackTick and Animations.maxCount > 0 then
-		SkillShot.__Track()
-		SkillShot.lastTrackTick = tick + Animations.maxCount/2
-	end
+	SkillShot.__Track()
 end
 
 function SkillShot.__Track()
 	local all = entityList:GetEntities({type = LuaEntity.TYPE_HERO})
-	for i,v in ipairs(all) do
+	for i = 1, #all do
+		local v = all[i]
 		if SkillShot.trackTable[v.handle] == nil and v.alive and v.visible then
-			SkillShot.trackTable[v.handle] = {nil,nil,nil,v,nil}
+			SkillShot.trackTable[v.handle] = {}
 		end
 		if SkillShot.trackTable[v.handle] ~= nil and (not v.alive or not v.visible) then
 			SkillShot.trackTable[v.handle] = nil
 		end
-		if SkillShot.trackTable[v.handle] and (not SkillShot.trackTable[v.handle].last or SkillShot.currentTick > SkillShot.trackTable[v.handle].last.tick) then
+		if SkillShot.trackTable[v.handle] and (not SkillShot.trackTable[v.handle].last or (SkillShot.currentTick - SkillShot.trackTable[v.handle].last.tick) > ((100/Animations.maxCount)*client.latency)) then
 			if SkillShot.trackTable[v.handle].last ~= nil then
 				local speed = (v.position - SkillShot.trackTable[v.handle].last.pos)/(SkillShot.currentTick - SkillShot.trackTable[v.handle].last.tick)
-				if not SkillShot.trackTable[v.handle].speed or GetDistance2D(speed,SkillShot.trackTable[v.handle].speed) > ((100/(Animations.maxCount/2))/10) or speed == Vector(0,0,0) or (SkillShot.trackTable[v.handle].movespeed and v.movespeed ~= SkillShot.trackTable[v.handle].movespeed) 
+				if not SkillShot.trackTable[v.handle].speed or GetDistance2D(speed,SkillShot.trackTable[v.handle].speed) > ((100/Animations.maxCount)*client.latency)*0.001 or speed == Vector(0,0,0) or (SkillShot.trackTable[v.handle].movespeed and v.movespeed ~= SkillShot.trackTable[v.handle].movespeed) 
 				or (SkillShot.trackTable[v.handle].rotR and SkillShot.trackTable[v.handle].rotR ~= v.rotR) then
 					SkillShot.trackTable[v.handle].speed = speed
 					SkillShot.trackTable[v.handle].movespeed = v.movespeed
@@ -99,7 +98,7 @@ function SkillShot.PredictedXYZ(t,delay)
 		local pred2 = SkillShot.InFront(t,(delay/1000)*t.movespeed)
 		local v = pred2
 		if pred and v then
-			if t.activity ~= LuaEntityNPC.ACTIVITY_MOVE or (GetDistance2D(pred,v) > GetDistance2D(t,v)) or SkillShot.AbilityMove(t) or (not t:CanMove() and not t:DoesHaveModifier("modifier_invoker_cold_snap_freeze")) then
+			if t.activity ~= LuaEntityNPC.ACTIVITY_MOVE or (GetDistance2D(pred,v) > GetDistance2D(t,v)) or SkillShot.AbilityMove(t) or (not t:CanMove() and not t:DoesHaveModifier("modifier_invoker_cold_snap_freeze")) or (SkillShot.trackTable[t.handle].rotR and SkillShot.trackTable[t.handle].rotR ~= t.rotR) then
 				v = pred
 			end
 		end
