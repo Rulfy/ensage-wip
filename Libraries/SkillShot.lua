@@ -12,7 +12,7 @@ require("libs.Animations")
  0 1 1 0 0 0 0 1    
  0 1 1 1 1 0 0 0    
 
-			SkillShot Library v1.4
+			SkillShot Library v1.5
 
 		Save as SkillShot.lua into Ensage\Scripts\libs.
 
@@ -24,6 +24,9 @@ require("libs.Animations")
 
 
 		Changelog:
+			v1.5
+			 - Added beta version of juke protection
+			 
 			v1.4:
 			 - Added Blind Prediction
 			 
@@ -68,15 +71,30 @@ function SkillShot.__Track()
 		if SkillShot.trackTable[v.handle] ~= nil and (not v.alive or not v.visible) then
 			SkillShot.trackTable[v.handle] = nil
 		end
-		if SkillShot.trackTable[v.handle] and (not SkillShot.trackTable[v.handle].last or (SkillShot.currentTick - SkillShot.trackTable[v.handle].last.tick) > ((100/Animations.maxCount)*client.latency)) then
-			if SkillShot.trackTable[v.handle].last ~= nil then
-				local speed = (v.position - SkillShot.trackTable[v.handle].last.pos)/(SkillShot.currentTick - SkillShot.trackTable[v.handle].last.tick)
+		if SkillShot.trackTable[v.handle] and (not SkillShot.trackTable[v.handle].last or (SkillShot.currentTick - SkillShot.trackTable[v.handle].last.tick) > client.latency) then
+			if SkillShot.trackTable[v.handle].last ~= nil then			
+				local speed = (v.position - SkillShot.trackTable[v.handle].last.pos)/((SkillShot.currentTick - SkillShot.trackTable[v.handle].last.tick))
 				if not SkillShot.trackTable[v.handle].speed or GetDistance2D(speed,SkillShot.trackTable[v.handle].speed) > ((100/Animations.maxCount)*client.latency)*0.001 or speed == Vector(0,0,0) or (SkillShot.trackTable[v.handle].movespeed and v.movespeed ~= SkillShot.trackTable[v.handle].movespeed) 
 				or (SkillShot.trackTable[v.handle].rotR and SkillShot.trackTable[v.handle].rotR ~= v.rotR) then
 					SkillShot.trackTable[v.handle].speed = speed
 					SkillShot.trackTable[v.handle].movespeed = v.movespeed
 					SkillShot.trackTable[v.handle].rotR = v.rotR
 				end
+				if SkillShot.trackTable[v.handle].lastpred then
+					local pred = SkillShot.PredictedXYZ(v,(SkillShot.currentTick - SkillShot.trackTable[v.handle].last.tick), true)
+					local dist = GetDistance2D(v,pred)
+					if GetDistance2D(pred,SkillShot.trackTable[v.handle].lastpred.pred) > dist*(1.5+(SkillShot.currentTick - SkillShot.trackTable[v.handle].last.tick)*0.001+client.latency*0.001) then
+						if SkillShot.trackTable[v.handle].lastpred.pred2 and GetDistance2D(pred,SkillShot.trackTable[v.handle].lastpred.pred2) > dist*(1.5+(SkillShot.currentTick - SkillShot.trackTable[v.handle].last.tick)*0.001+client.latency*0.001) then
+							SkillShot.trackTable[v.handle].SpecialSpeed = Vector(0,0,0)
+						end
+						SkillShot.trackTable[v.handle].lastpred.pred2 = SkillShot.PredictedXYZ(v,((SkillShot.currentTick - SkillShot.trackTable[v.handle].last.tick)), true)
+					else
+						SkillShot.trackTable[v.handle].SpecialSpeed = nil
+					end
+				end	
+				if not SkillShot.trackTable[v.handle].lastpred then SkillShot.trackTable[v.handle].lastpred = {} end
+				SkillShot.trackTable[v.handle].lastpred.pred = SkillShot.PredictedXYZ(v,((SkillShot.currentTick - SkillShot.trackTable[v.handle].last.tick)), true)
+				SkillShot.trackTable[v.handle].lastpred.dist = GetDistance2D(v,SkillShot.trackTable[v.handle].lastpred.pred)
 			end
 			SkillShot.trackTable[v.handle].last = {pos = v.position, tick = SkillShot.currentTick}
 		end
@@ -91,16 +109,19 @@ function SkillShot.InFront(t,distance)
 	end
 end
 
-function SkillShot.PredictedXYZ(t,delay)
+function SkillShot.PredictedXYZ(t,delay,test)
 	if SkillShot.isIdle(t) then return t.position
 	elseif SkillShot.trackTable[t.handle] and SkillShot.trackTable[t.handle].speed and (GetType(SkillShot.trackTable[t.handle].speed) == "Vector" or GetType(SkillShot.trackTable[t.handle].speed) == "Vector2D") and (SkillShot.trackTable[t.handle].speed ~= Vector(0,0,0) or t.activity ~= LuaEntityNPC.ACTIVITY_MOVE) then	
 		local pred = t.position + SkillShot.trackTable[t.handle].speed * delay
 		local pred2 = SkillShot.InFront(t,(delay/1000)*t.movespeed)
-		local v = pred2
+		local v = pred
 		if pred and v then
-			if t.activity ~= LuaEntityNPC.ACTIVITY_MOVE or (GetDistance2D(pred,v) > GetDistance2D(t,v)) or SkillShot.AbilityMove(t) or (not t:CanMove() and not t:DoesHaveModifier("modifier_invoker_cold_snap_freeze")) or (SkillShot.trackTable[t.handle].rotR and SkillShot.trackTable[t.handle].rotR ~= t.rotR) then
+			if t.activity ~= LuaEntityNPC.ACTIVITY_MOVE or (GetDistance2D(pred,v) > GetDistance2D(t,v)) or SkillShot.AbilityMove(t) or (not t:CanMove() or t:DoesHaveModifier("modifier_invoker_cold_snap_freeze")) then
 				v = pred
 			end
+		end
+		if SkillShot.trackTable[t.handle].SpecialSpeed and not test then
+			v = t.position + SkillShot.trackTable[t.handle].SpecialSpeed * delay
 		end
 		return Vector(v.x,v.y,t.position.z)
 	end
@@ -121,13 +142,13 @@ function SkillShot.SkillShotXYZ(source,t,delay,speed)
 				local speed1 = SkillShot.trackTable[t.handle].speed.x^2 + SkillShot.trackTable[t.handle].speed.y^2 - (speed/1000)^2
 				local predictedTime = (-2*(delay2) - math.sqrt((2*delay2)^2 - 4*speed1*(prediction.x^2 + prediction.y^2)))/(2*speed1)
 				prediction2 = SkillShot.PredictedXYZ(t,delay + predictedTime)					
-				while math.floor(distance) ~= math.floor(math.sqrt(math.pow(sourcepos.x-prediction.x,2)+math.pow(sourcepos.y-prediction.y,2))) do
-					prediction = prediction2
-					local delay2 = prediction.x*SkillShot.trackTable[t.handle].speed.x + prediction.y*SkillShot.trackTable[t.handle].speed.y
-					local speed1 = SkillShot.trackTable[t.handle].speed.x^2 + SkillShot.trackTable[t.handle].speed.y^2 - (speed/1000)^2
-					local predictedTime = (-2*(delay2) - math.sqrt((2*delay2)^2 - 4*speed1*(prediction.x^2 + prediction.y^2)))/(2*speed1)
-					prediction2 = SkillShot.PredictedXYZ(t,delay + predictedTime)
-				end
+				-- while math.floor(distance) ~= math.floor(math.sqrt(math.pow(sourcepos.x-prediction.x,2)+math.pow(sourcepos.y-prediction.y,2))) do
+					-- prediction = prediction2
+					-- local delay2 = prediction.x*SkillShot.trackTable[t.handle].speed.x + prediction.y*SkillShot.trackTable[t.handle].speed.y
+					-- local speed1 = SkillShot.trackTable[t.handle].speed.x^2 + SkillShot.trackTable[t.handle].speed.y^2 - (speed/1000)^2
+					-- local predictedTime = (-2*(delay2) - math.sqrt((2*delay2)^2 - 4*speed1*(prediction.x^2 + prediction.y^2)))/(2*speed1)
+					-- prediction2 = SkillShot.PredictedXYZ(t,delay + predictedTime)
+				-- end
 			end
 			if prediction2 then
 				return Vector(prediction2.x, prediction2.y, t.position.z)
