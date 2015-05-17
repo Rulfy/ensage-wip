@@ -2063,7 +2063,7 @@ end
 
 --Returns if LuaEntity can move.
 function LuaEntityNPC:CanMove()
-	return not self:IsRooted() and not self:IsStunned() and self.alive
+	return not self:IsRooted() and not self:IsStunned() and not self:DoesHaveModifier("modifier_slark_pounce_leash") and self.alive
 end
 
 --Returns if LuaEntity can cast spells.
