@@ -71,7 +71,7 @@ function SkillShot.__Track()
 		if SkillShot.trackTable[v.handle] ~= nil and (not v.alive or not v.visible) then
 			SkillShot.trackTable[v.handle] = nil
 		end
-		if SkillShot.trackTable[v.handle] and (not SkillShot.trackTable[v.handle].last or (SkillShot.currentTick - SkillShot.trackTable[v.handle].last.tick) > client.latency) then
+		if SkillShot.trackTable[v.handle] and (not SkillShot.trackTable[v.handle].last or (SkillShot.currentTick - SkillShot.trackTable[v.handle].last.tick) > math.max(math.abs(Animations.maxCount-client.latency),1)) then
 			if SkillShot.trackTable[v.handle].last ~= nil then			
 				local speed = (v.position - SkillShot.trackTable[v.handle].last.pos)/((SkillShot.currentTick - SkillShot.trackTable[v.handle].last.tick))
 				if not SkillShot.trackTable[v.handle].speed or GetDistance2D(speed,SkillShot.trackTable[v.handle].speed) > ((100/Animations.maxCount)*client.latency)*0.001 or speed == Vector(0,0,0) or (SkillShot.trackTable[v.handle].movespeed and v.movespeed ~= SkillShot.trackTable[v.handle].movespeed) 
@@ -142,13 +142,13 @@ function SkillShot.SkillShotXYZ(source,t,delay,speed)
 				local speed1 = SkillShot.trackTable[t.handle].speed.x^2 + SkillShot.trackTable[t.handle].speed.y^2 - (speed/1000)^2
 				local predictedTime = (-2*(delay2) - math.sqrt((2*delay2)^2 - 4*speed1*(prediction.x^2 + prediction.y^2)))/(2*speed1)
 				prediction2 = SkillShot.PredictedXYZ(t,delay + predictedTime)					
-				-- while math.floor(distance) ~= math.floor(math.sqrt(math.pow(sourcepos.x-prediction.x,2)+math.pow(sourcepos.y-prediction.y,2))) do
-					-- prediction = prediction2
-					-- local delay2 = prediction.x*SkillShot.trackTable[t.handle].speed.x + prediction.y*SkillShot.trackTable[t.handle].speed.y
-					-- local speed1 = SkillShot.trackTable[t.handle].speed.x^2 + SkillShot.trackTable[t.handle].speed.y^2 - (speed/1000)^2
-					-- local predictedTime = (-2*(delay2) - math.sqrt((2*delay2)^2 - 4*speed1*(prediction.x^2 + prediction.y^2)))/(2*speed1)
-					-- prediction2 = SkillShot.PredictedXYZ(t,delay + predictedTime)
-				-- end
+				while math.floor(distance) ~= math.floor(math.sqrt(math.pow(sourcepos.x-prediction.x,2)+math.pow(sourcepos.y-prediction.y,2))) do
+					prediction = prediction2
+					local delay2 = prediction.x*SkillShot.trackTable[t.handle].speed.x + prediction.y*SkillShot.trackTable[t.handle].speed.y
+					local speed1 = SkillShot.trackTable[t.handle].speed.x^2 + SkillShot.trackTable[t.handle].speed.y^2 - (speed/1000)^2
+					local predictedTime = (-2*(delay2) - math.sqrt((2*delay2)^2 - 4*speed1*(prediction.x^2 + prediction.y^2)))/(2*speed1)
+					prediction2 = SkillShot.PredictedXYZ(t,delay + predictedTime)
+				end
 			end
 			if prediction2 then
 				return Vector(prediction2.x, prediction2.y, t.position.z)
@@ -162,7 +162,21 @@ function SkillShot.BlindSkillShotXYZ(source,t,speed,castpoint)
 		local distance = GetDistance2D(SkillShot.BlindPredictionTable[t.handle].range, source)
 		return Vector(SkillShot.BlindPredictionTable[t.handle].range.x + SkillShot.BlindPredictionTable[t.handle].move * (distance/(speed * math.sqrt(1 - math.pow(SkillShot.BlindPredictionTable[t.handle].move/speed,2))) + castpoint) * math.cos(t.rotR), SkillShot.BlindPredictionTable[t.handle].range.y + SkillShot.BlindPredictionTable[t.handle].move * (distance/(speed * math.sqrt(1 - math.pow(SkillShot.BlindPredictionTable[t.handle].move/speed,2))) + castpoint) * math.sin(t.rotR),SkillShot.BlindPredictionTable[t.handle].range.z)
 	end
-end			
+end		
+
+function SkillShot.BlockableBlindSkillShotXYZ(source,t,speed,castpoint)
+	if team == nil then
+		team = false
+	end
+	local pred 
+	if source and SkillShot.BlindPredictionTable[t.handle] and SkillShot.BlindPredictionTable[t.handle].range then
+		local distance = GetDistance2D(SkillShot.BlindPredictionTable[t.handle].range, source)
+		pred = Vector(SkillShot.BlindPredictionTable[t.handle].range.x + SkillShot.BlindPredictionTable[t.handle].move * (distance/(speed * math.sqrt(1 - math.pow(SkillShot.BlindPredictionTable[t.handle].move/speed,2))) + castpoint) * math.cos(t.rotR), SkillShot.BlindPredictionTable[t.handle].range.y + SkillShot.BlindPredictionTable[t.handle].move * (distance/(speed * math.sqrt(1 - math.pow(SkillShot.BlindPredictionTable[t.handle].move/speed,2))) + castpoint) * math.sin(t.rotR),SkillShot.BlindPredictionTable[t.handle].range.z)
+	end
+	if pred and (GetType(pred) == "Vector" or GetType(pred) == "Vector2D") and not SkillShot.__GetBlock(source.position or source,pred,t,aoe,team) then
+		return pred
+	end
+end		
 
 function SkillShot.BlindPrediction()
 	for i,t in ipairs(entityList:GetEntities({type = LuaEntity.TYPE_HERO})) do
@@ -281,7 +295,7 @@ function SkillShot.AbilityMove(t)
 end
 	
 function SkillShot.isIdle(t)
-	return (SkillShot.trackTable[t.handle] and SkillShot.trackTable[t.handle].speed and SkillShot.trackTable[t.handle].speed == Vector(0,0,0)) or t:DoesHaveModifier("modifier_cyclone") or t:DoesHaveModifier("modifier_invoker_tornado") or (t.activity == LuaEntityNPC.ACTIVITY_IDLE and not SkillShot.AbilityMove(t))
+	return (SkillShot.trackTable[t.handle] and SkillShot.trackTable[t.handle].speed and SkillShot.trackTable[t.handle].speed == Vector(0,0,0)) or t:DoesHaveModifier("modifier_cyclone") or t:DoesHaveModifier("modifier_invoker_tornado") or (t.activity == LuaEntityNPC.ACTIVITY_IDLE and not SkillShot.AbilityMove(t)) or Animations.isAttacking(t)
 end
 
 scriptEngine:RegisterLibEvent(EVENT_FRAME,SkillShot.__TrackTick)
