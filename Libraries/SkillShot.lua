@@ -1,6 +1,6 @@
 require("libs.Utils")
 require("libs.VectorOp")
-require("libs.Animations")
+require("libs.AnimationsBETA")
 
 --[[
  0 1 0 1 0 0 1 1    
@@ -251,7 +251,6 @@ end
 
 function SkillShot.__CheckBlock(units,v1,v2,aoe,target)
 	distance = GetDistance2D(v1,v2)
-	local i = 1
 	local block = false
 	local filterunits = {}
 	for k,v in pairs(units) do
