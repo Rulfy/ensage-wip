@@ -1986,6 +1986,7 @@ function FindAngleBetween(first, second)
 			return xAngle + 270
 		end
 	end
+	return 0
 end
 
 function FindAngleR(entity)
