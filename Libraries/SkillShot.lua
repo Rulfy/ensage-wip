@@ -179,7 +179,9 @@ function SkillShot.BlockableBlindSkillShotXYZ(source,t,speed,castpoint,aoe,team)
 end		
 
 function SkillShot.BlindPrediction()
-	for i,t in ipairs(entityList:GetEntities({type = LuaEntity.TYPE_HERO})) do
+	local enemies = entityList:GetEntities({type = LuaEntity.TYPE_HERO})
+	for i = 1, #enemies do
+		local t = enemies[i]
 		if not t:IsIllusion() then
 			if SkillShot.BlindPredictionTable[t.handle] == nil and t.alive then
 				SkillShot.BlindPredictionTable[t.handle] = {}
@@ -297,13 +299,6 @@ function SkillShot.__CheckBlock(units,v1,v2,aoe,target)
 				break
 			end
 		end	
-		local calc1 = (mathfloor(mathsqrt((v2.x-v.position.x)^2 + (v2.y-v.position.y)^2)))
-		local calc2 = (mathfloor(mathsqrt((v1.x-v.position.x)^2 + (v1.y-v.position.y)^2)))
-		local calc4 = (mathfloor(mathsqrt((v1.x-v2.x)^2 + (v1.y-v2.y)^2)))
-		if calc1 < calc4 and calc2 < calc4 then
-			block = true
-			break
-		end
 	end
 	return block
 end
