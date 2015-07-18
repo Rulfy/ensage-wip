@@ -1493,6 +1493,53 @@ function LuaEntityNPC:GetChanneledAbility()
 	end
 end
 
+--Returns real movespeed of Entity
+function LuaEntityNPC:GetMovespeed()
+	local tempSpeed = self.movespeed
+	local boots = {"item_boots", "item_power_treads", 
+						"item_guardian_greaves", "item_arcane_boots", 
+						"item_phase_boots", "item_travel_boots", 
+						"item_travel_boots_2" }
+	local yashaItems = {"item_manta", "item_sange_and_yasha", "item_yasha"}
+	local bonusItems = {"item_cyclone", "item_ancient_janggo"}
+	local bonusModifiers = {{ "modifier_item_mask_of_madness_berserk", 17 }, 
+							{ "modifier_item_ancient_janggo_active", 5 },
+							{ "modifier_item_phase_boots_active", 16 }}
+	local bootsBonus, yashaBonus, flatBonus, percBonus = 0, 0, 0, 0
+	for i = 1,#self.items do
+		local v = self.items[i]
+		for z = 1,#boots do
+			if v.name == boots[z] then
+				local b = v:GetSpecialData("bonus_movement") or v:GetSpecialData("bonus_movement_speed") or 0
+				bootsBonus = math.max(bootsBonus,b)
+			end
+		end
+		for z = 1,#yashaItems do
+			if v.name == yashaItems[z] then
+				local b = v:GetSpecialData("bonus_movement") or v:GetSpecialData("bonus_movement_speed") or v:GetSpecialData("movement_speed_percent_bonus") or 0
+				yashaBonus = math.max(yashaBonus,b)
+			end
+		end
+		for z = 1,#bonusItems do
+			if v.name == bonusItems[z] then
+				local b = v:GetSpecialData("bonus_movement") or v:GetSpecialData("bonus_movement_speed") or v:GetSpecialData("movement_speed_percent_bonus") or 0
+				if v.name == "item_cyclone" then
+					flatBonus = flatBonus + b
+				else
+					percBonus = percBonus + b
+				end
+			end
+		end
+	end		
+	for i = 1, #bonusModifiers do
+		local v = bonusModifiers[i]
+		if self:DoesHaveModifier(v[1]) then
+			percBonus = percBonus + v[2]
+		end
+	end
+	return math.min((tempSpeed + bootsBonus + flatBonus) * (1 + yashaBonus/100 + percBonus/100),522)
+end
+
 --Returns the distance between LuaEntity and the given unit/position.
 function LuaEntityNPC:GetDistance2D(a)
 	smartAssert(GetType(a) == "Vector" or GetType(a) == "LuaEntity" or GetType(a) == "Vector2D" or GetType(a) == "Projectile", "GetDistance2D: Invalid Parameter (Got "..GetType(a)..")")
@@ -2176,6 +2223,7 @@ utils.entityFuncs = {
 	{"FindItem",              "LuaEntityNPC"},
 	{"FindDagon",             "LuaEntityNPC"},
 	{"SetPowerTreadsState",   "LuaEntityNPC"},
+	{"GetMovespeed",          "LuaEntityNPC"},
 	{"CastItem",              "LuaEntityNPC"},
 	{"SafeCastItem",          "LuaEntityNPC"},
 	{"FindAbility",           "LuaEntityNPC"},
