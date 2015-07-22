@@ -1081,7 +1081,7 @@ function SelectBack(units)
 	smartAssert(type(units) == "table", debug.getinfo(1, "n").name..": Invalid Unit Table")
 	if #units > 0 then
 		for i,v in ipairs(units) do
-			if v.alive and v.visible then
+			if v.visible then
 				if i == 1 then
 					entityList:GetMyPlayer():Select(v)
 				else
