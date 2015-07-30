@@ -108,13 +108,12 @@
 
 --== SETTINGS ==--
 
-font = drawMgr:CreateFont("11", "Arial", 14, 500)
+hcFont = drawMgr:CreateFont("11", "Arial", 14, 500)
 
 TOP_MARGIN = 60
 SIDE_MARGIN = 10
 BUTTON_W = 100
 BUTTON_H = 15
-FONT_SIZE = 14
 BG_COLOR = 0x000000AF
 HL_COLOR = 0xFFFFFF3F	
 TEXT_COLOR = 0xFFFFFFFF
@@ -127,7 +126,7 @@ SGC_TYPE_NUMCYCLE = 3
 SGC_TYPE_CYCLE = 4
 CFG_FILE = SCRIPT_PATH.."scripts.cfg"
 CURRENT_FILE = "_currentscripts.cfg"
-UPDATE_CYCLE = 1000
+UPDATE_CYCLE = 1
 
 --==SCRIPT CONFIGURATION GUI CLASS==--
 ConfigGUI = {}
@@ -137,7 +136,7 @@ function ConfigGUI:New(name)
 
 	obj = {}
 
-	obj._settings = {id = name , name = name , showCount = 0 , menuOpen = false, mR = 0, sR = 0, sleep = 0, keyChange = nil, visible = true, visuals = {}, extention = 0}
+	obj._settings = {id = GetCallerScript() , name = GetCallerScript() , showCount = 0 , menuOpen = false, mR = 0, sR = 0, sleep = 0, keyChange = nil, visible = true, visuals = {}, extention = 0}
 	obj._cfg = {}
 
 	--Returns the start line and the end line of the script according to the line table
@@ -244,7 +243,7 @@ function ConfigGUI:New(name)
 	--Sets the visual name of the settings button
 	function obj:SetName(string)
 		self._settings.name = string
-		self._settings.visuals.main.text:SetText(self._settings.name)
+		self._settings.visuals.main.text.text = self._settings.name
 	end
 
 	--Sets the visual name of the settings button
@@ -396,30 +395,30 @@ function ConfigGUI:New(name)
 				if self[self._cfg[index].id] then
 					self._settings.visuals.button[self._cfg[index].id].value.color = 0x009300FF
 					if self._settings.visuals.button[self._cfg[index].id].value.text == "OFF" then
-						x_change = FONT_SIZE/3
-						self._settings.visuals.button[self._cfg[index].id].value:SetPosition(self._settings.visuals.button[self._cfg[index].id].value.x + x_change,self._settings.visuals.button[self._cfg[index].id].value.y)
+						x_change = hcFont:GetTextSize("OFF").x - hcFont:GetTextSize("ON").x
+						self._settings.visuals.button[self._cfg[index].id].value.position = Vector2D(self._settings.visuals.button[self._cfg[index].id].value.x + x_change,self._settings.visuals.button[self._cfg[index].id].value.y)
 					end
-					self._settings.visuals.button[self._cfg[index].id].value:SetText("ON")
+					self._settings.visuals.button[self._cfg[index].id].value.text = "ON"
 				else
 					self._settings.visuals.button[self._cfg[index].id].value.color = 0x930000FF
 					if self._settings.visuals.button[self._cfg[index].id].value.text == "ON" then
-						x_change = -FONT_SIZE/3
-						self._settings.visuals.button[self._cfg[index].id].value:SetPosition(self._settings.visuals.button[self._cfg[index].id].value.x + x_change,self._settings.visuals.button[self._cfg[index].id].value.y)
+						x_change = hcFont:GetTextSize("ON").x - hcFont:GetTextSize("OFF").x
+						self._settings.visuals.button[self._cfg[index].id].value.position = Vector2D(self._settings.visuals.button[self._cfg[index].id].value.x + x_change,self._settings.visuals.button[self._cfg[index].id].value.y)
 					end
-					self._settings.visuals.button[self._cfg[index].id].value:SetText("OFF")
+					self._settings.visuals.button[self._cfg[index].id].value.text = "OFF"
 				end
 			elseif self._cfg[index].table then
-				x_change = drawManager:GetTextSize(self._settings.visuals.button[self._cfg[index].id].value.text,FONT_SIZE)[1] - drawManager:GetTextSize(self._cfg[index].table[tonumber(self[self._cfg[index].id])],FONT_SIZE)[1]
-				self._settings.visuals.button[self._cfg[index].id].value:SetPosition(self._settings.visuals.button[self._cfg[index].id].value.x + x_change,self._settings.visuals.button[self._cfg[index].id].value.y)
-				self._settings.visuals.button[self._cfg[index].id].value:SetText(self._cfg[index].table[tonumber(self[self._cfg[index].id])])
+				x_change = hcFont:GetTextSize(self._settings.visuals.button[self._cfg[index].id].value.text).x - hcFont:GetTextSize(self._cfg[index].table[tonumber(self[self._cfg[index].id])]).x
+				self._settings.visuals.button[self._cfg[index].id].value.position = Vector2D(self._settings.visuals.button[self._cfg[index].id].value.x + x_change,self._settings.visuals.button[self._cfg[index].id].value.y)
+				self._settings.visuals.button[self._cfg[index].id].value.text = self._cfg[index].table[tonumber(self[self._cfg[index].id])]
 			else
-				x_change = drawManager:GetTextSize(self._settings.visuals.button[self._cfg[index].id].value.text,FONT_SIZE)[1] - drawManager:GetTextSize(tostring(self[self._cfg[index].id]),FONT_SIZE)[1]
-				self._settings.visuals.button[self._cfg[index].id].value:SetPosition(self._settings.visuals.button[self._cfg[index].id].value.x + x_change,self._settings.visuals.button[self._cfg[index].id].value.y)
-				self._settings.visuals.button[self._cfg[index].id].value:SetText(tostring(self[self._cfg[index].id]))
+				x_change = hcFont:GetTextSize(self._settings.visuals.button[self._cfg[index].id].value.text).x - hcFont:GetTextSize(tostring(self[self._cfg[index].id])).x
+				self._settings.visuals.button[self._cfg[index].id].value.position = Vector2D(self._settings.visuals.button[self._cfg[index].id].value.x + x_change,self._settings.visuals.button[self._cfg[index].id].value.y)
+				self._settings.visuals.button[self._cfg[index].id].value.text = tostring(self[self._cfg[index].id])
 			end
 			if self._settings.visuals.permaShow[self._cfg[index].id] then
-				self._settings.visuals.permaShow[self._cfg[index].id].value:SetText(self._settings.visuals.button[self._cfg[index].id].value.text)
-				self._settings.visuals.permaShow[self._cfg[index].id].value:SetPosition(self._settings.visuals.permaShow[self._cfg[index].id].value.x + x_change,self._settings.visuals.permaShow[self._cfg[index].id].value.y)
+				self._settings.visuals.permaShow[self._cfg[index].id].value.text = self._settings.visuals.button[self._cfg[index].id].value.text
+				self._settings.visuals.permaShow[self._cfg[index].id].value.position = Vector2D(self._settings.visuals.permaShow[self._cfg[index].id].value.x + x_change,self._settings.visuals.permaShow[self._cfg[index].id].value.y)
 				self._settings.visuals.permaShow[self._cfg[index].id].value.color = self._settings.visuals.button[self._cfg[index].id].value.color
 			end
 		elseif self._settings.visuals.permaShow[self._cfg[index].id] then
@@ -427,26 +426,26 @@ function ConfigGUI:New(name)
 				if self[self._cfg[index].id] then
 					self._settings.visuals.permaShow[self._cfg[index].id].value.color = 0x009300FF
 					if self._settings.visuals.permaShow[self._cfg[index].id].value.text == "OFF" then
-						x_change = FONT_SIZE/3
-						self._settings.visuals.permaShow[self._cfg[index].id].value:SetPosition(self._settings.visuals.permaShow[self._cfg[index].id].value.x + x_change,self._settings.visuals.permaShow[self._cfg[index].id].value.y)
+						x_change = hcFont:GetTextSize("OFF").x - hcFont:GetTextSize("ON").x
+						self._settings.visuals.permaShow[self._cfg[index].id].value.position = Vector2D(self._settings.visuals.permaShow[self._cfg[index].id].value.x + x_change,self._settings.visuals.permaShow[self._cfg[index].id].value.y)
 					end
-					self._settings.visuals.permaShow[self._cfg[index].id].value:SetText("ON")
+					self._settings.visuals.permaShow[self._cfg[index].id].value.text = "ON"
 				else
 					self._settings.visuals.permaShow[self._cfg[index].id].value.color = 0x930000FF
 					if self._settings.visuals.permaShow[self._cfg[index].id].value.text == "ON" then
-						x_change = -FONT_SIZE/3
-						self._settings.visuals.permaShow[self._cfg[index].id].value:SetPosition(self._settings.visuals.permaShow[self._cfg[index].id].value.x + x_change,self._settings.visuals.permaShow[self._cfg[index].id].value.y)
+						x_change = hcFont:GetTextSize("ON").x - hcFont:GetTextSize("OFF").x
+						self._settings.visuals.permaShow[self._cfg[index].id].value.position = Vector2D(self._settings.visuals.permaShow[self._cfg[index].id].value.x + x_change,self._settings.visuals.permaShow[self._cfg[index].id].value.y)
 					end
-					self._settings.visuals.permaShow[self._cfg[index].id].value:SetText("OFF")
+					self._settings.visuals.permaShow[self._cfg[index].id].value.text = "OFF"
 				end
 			elseif self._cfg[index].table then
-				x_change = drawManager:GetTextSize(self._settings.visuals.permaShow[self._cfg[index].id].value.text,FONT_SIZE)[1] - drawManager:GetTextSize(self._cfg[index].table[tonumber(self[self._cfg[index].id])],FONT_SIZE)[1]
-				self._settings.visuals.permaShow[self._cfg[index].id].value:SetPosition(self._settings.visuals.permaShow[self._cfg[index].id].value.x + x_change,self._settings.visuals.permaShow[self._cfg[index].id].value.y)
-				self._settings.visuals.permaShow[self._cfg[index].id].value:SetText(self._cfg[index].table[tonumber(self[self._cfg[index].id])])
+				x_change = hcFont:GetTextSize(self._settings.visuals.permaShow[self._cfg[index].id].value.text).x - hcFont:GetTextSize(self._cfg[index].table[tonumber(self[self._cfg[index].id])]).x
+				self._settings.visuals.permaShow[self._cfg[index].id].value.position = Vector2D(self._settings.visuals.permaShow[self._cfg[index].id].value.x + x_change,self._settings.visuals.permaShow[self._cfg[index].id].value.y)
+				self._settings.visuals.permaShow[self._cfg[index].id].value.text = self._cfg[index].table[tonumber(self[self._cfg[index].id])]
 			else
-				x_change = drawManager:GetTextSize(self._settings.visuals.permaShow[self._cfg[index].id].value.text,FONT_SIZE)[1] - drawManager:GetTextSize(tostring(self[self._cfg[index].id]),FONT_SIZE)[1]
-				self._settings.visuals.permaShow[self._cfg[index].id].value:SetPosition(self._settings.visuals.permaShow[self._cfg[index].id].value.x + x_change,self._settings.visuals.permaShow[self._cfg[index].id].value.y)
-				self._settings.visuals.permaShow[self._cfg[index].id].value:SetText(tostring(self[self._cfg[index].id]))
+				x_change = hcFont:GetTextSize(self._settings.visuals.permaShow[self._cfg[index].id].value.text).x - hcFont:GetTextSize(tostring(self[self._cfg[index].id])).x
+				self._settings.visuals.permaShow[self._cfg[index].id].value.position = self._settings.visuals.permaShow[self._cfg[index].id].value.x + x_change,self._settings.visuals.permaShow[self._cfg[index].id].value.y
+				self._settings.visuals.permaShow[self._cfg[index].id].value.text = tostring(self[self._cfg[index].id])
 			end
 		end
 	end
@@ -484,9 +483,9 @@ function ConfigGUI:New(name)
 	function obj:LowerObject(drawObj,_y)
 		if drawObj then
 			if drawObj.w then
-				drawObj:SetPosition(drawObj.x,drawObj.y + _y,drawObj.w,drawObj.h)
+				drawObj.y = drawObj.y + _y
 			else
-				drawObj:SetPosition(drawObj.x,drawObj.y + _y)
+				drawObj.y = drawObj.y + _y
 			end
 		end
 	end
@@ -592,53 +591,48 @@ function ConfigGUI:New(name)
 				end
 				local visibility = self._settings.visible
 				self._settings.visuals.button[v.id] = {}
-				self._settings.visuals.button[v.id].bg1 = drawManager:CreateRect(drawManager.screenWidth - (SIDE_MARGIN + (3+self._settings.extention)*BUTTON_W),TOP_MARGIN + (mainRow+i-1)*BUTTON_H,5*BUTTON_W/6,BUTTON_H,BG_COLOR)
+				self._settings.visuals.button[v.id].bg1 = drawMgr:CreateRect(client.screenSize.x - (SIDE_MARGIN + (3+self._settings.extention)*BUTTON_W),TOP_MARGIN + (mainRow+i-1)*BUTTON_H,5*BUTTON_W/6,BUTTON_H,BG_COLOR)
 				self._settings.visuals.button[v.id].bg1.visible = visibility
-				self._settings.visuals.button[v.id].bg2 = drawManager:CreateRect(drawManager.screenWidth - (SIDE_MARGIN + (13+self._settings.extention*6)*BUTTON_W/6),TOP_MARGIN + (mainRow+i-1)*BUTTON_H,BUTTON_W/2,BUTTON_H,BG_COLOR)
+				self._settings.visuals.button[v.id].bg2 = drawMgr:CreateRect(client.screenSize.x - (SIDE_MARGIN + (13+self._settings.extention*6)*BUTTON_W/6),TOP_MARGIN + (mainRow+i-1)*BUTTON_H,BUTTON_W/2,BUTTON_H,BG_COLOR)
 				self._settings.visuals.button[v.id].bg2.visible = visibility
-				self._settings.visuals.button[v.id].bg3 = drawManager:CreateRect(drawManager.screenWidth - (SIDE_MARGIN + (5+self._settings.extention*3)*BUTTON_W/3),TOP_MARGIN + (mainRow+i-1)*BUTTON_H,(2*BUTTON_W/3)+self._settings.extention*BUTTON_W,BUTTON_H,BG_COLOR)
+				self._settings.visuals.button[v.id].bg3 = drawMgr:CreateRect(client.screenSize.x - (SIDE_MARGIN + (5+self._settings.extention*3)*BUTTON_W/3),TOP_MARGIN + (mainRow+i-1)*BUTTON_H,(2*BUTTON_W/3)+self._settings.extention*BUTTON_W,BUTTON_H,BG_COLOR)
 				self._settings.visuals.button[v.id].bg3.visible = visibility
-				self._settings.visuals.button[v.id].border = drawManager:CreateRect(drawManager.screenWidth - (SIDE_MARGIN + (3+self._settings.extention)*BUTTON_W),TOP_MARGIN + (mainRow+i-1)*BUTTON_H,(2+self._settings.extention)*BUTTON_W,BUTTON_H,BORDER_COLOR,true)
+				self._settings.visuals.button[v.id].border = drawMgr:CreateRect(client.screenSize.x - (SIDE_MARGIN + (3+self._settings.extention)*BUTTON_W),TOP_MARGIN + (mainRow+i-1)*BUTTON_H,(2+self._settings.extention)*BUTTON_W,BUTTON_H,BORDER_COLOR,true)
 				self._settings.visuals.button[v.id].border.visible = visibility
-				self._settings.visuals.button[v.id].name = drawManager:CreateText(drawManager.screenWidth - (SIDE_MARGIN + (3+self._settings.extention)*BUTTON_W) + 2,TOP_MARGIN + (mainRow+i-1)*BUTTON_H + (BUTTON_H - FONT_SIZE)/2,TEXT_COLOR,v.name..":")
+				self._settings.visuals.button[v.id].name = drawMgr:CreateText(client.screenSize.x - (SIDE_MARGIN + (3+self._settings.extention)*BUTTON_W) + 2,TOP_MARGIN + (mainRow+i-1)*BUTTON_H + (BUTTON_H - hcFont.tall)/2,TEXT_COLOR,v.name..":",hcFont)
 				self._settings.visuals.button[v.id].name.visible = visibility
 				--if ScriptConfig._settings.keyChange == i then
-				--	self._settings.visuals.button[v.id].key = drawManager:CreateText(drawManager.screenWidth - (SIDE_MARGIN + 2*BUTTON_W) - 5,TOP_MARGIN + (mainRow+i-1)*BUTTON_H + (BUTTON_H - FONT_SIZE)/2,TEXT_COLOR,"ASSIGN A KEY")
+				--	self._settings.visuals.button[v.id].key = drawMgr:CreateText(client.screenSize.x - (SIDE_MARGIN + 2*BUTTON_W) - 5,TOP_MARGIN + (mainRow+i-1)*BUTTON_H + (BUTTON_H - hcFont)/2,TEXT_COLOR,"ASSIGN A KEY")
 				if v.key then
-					self._settings.visuals.button[v.id].key = drawManager:CreateText(drawManager.screenWidth - (SIDE_MARGIN + (2+self._settings.extention)*BUTTON_W) - 5,TOP_MARGIN + (mainRow+i-1)*BUTTON_H + (BUTTON_H - FONT_SIZE)/2,TEXT_COLOR,KeytoString(v.key))
+					self._settings.visuals.button[v.id].key = drawMgr:CreateText(client.screenSize.x - (SIDE_MARGIN + (2+self._settings.extention)*BUTTON_W) - 5,TOP_MARGIN + (mainRow+i-1)*BUTTON_H + (BUTTON_H - hcFont.tall)/2,TEXT_COLOR,KeytoString(v.key),hcFont)
 					self._settings.visuals.button[v.id].key.visible = visibility
 				end
 				if type(self[v.id]) == "boolean" then
 					if self[v.id] then
-						self._settings.visuals.button[v.id].value = drawManager:CreateText(drawManager.screenWidth - (SIDE_MARGIN + BUTTON_W)- 2*FONT_SIZE/3 - 7,TOP_MARGIN + (mainRow+i-1)*BUTTON_H + (BUTTON_H - FONT_SIZE)/2,0x009300FF,"ON")
+						self._settings.visuals.button[v.id].value = drawMgr:CreateText(client.screenSize.x - (SIDE_MARGIN + BUTTON_W) - hcFont:GetTextSize("ON").x - 2,TOP_MARGIN + (mainRow+i-1)*BUTTON_H + (BUTTON_H - hcFont.tall)/2,0x009300FF,"ON",hcFont)
 					else
-						self._settings.visuals.button[v.id].value = drawManager:CreateText(drawManager.screenWidth - (SIDE_MARGIN + BUTTON_W) - FONT_SIZE - 7,TOP_MARGIN + (mainRow+i-1)*BUTTON_H + (BUTTON_H - FONT_SIZE)/2,0x930000FF,"OFF")
+						self._settings.visuals.button[v.id].value = drawMgr:CreateText(client.screenSize.x - (SIDE_MARGIN + BUTTON_W) - hcFont:GetTextSize("OFF").x - 2,TOP_MARGIN + (mainRow+i-1)*BUTTON_H + (BUTTON_H - hcFont.tall)/2,0x930000FF,"OFF",hcFont)
 					end
 				elseif v.table then
-					self._settings.visuals.button[v.id].value = drawManager:CreateText(drawManager.screenWidth - (SIDE_MARGIN + BUTTON_W) - drawManager:GetTextSize(tostring(v.table[tonumber(self[v.id])]),FONT_SIZE)[1] - 2,TOP_MARGIN + (mainRow+i-1)*BUTTON_H + (BUTTON_H - FONT_SIZE)/2,TEXT_COLOR,v.table[tonumber(self[v.id])])
+					self._settings.visuals.button[v.id].value = drawMgr:CreateText(client.screenSize.x - (SIDE_MARGIN + BUTTON_W) - hcFont:GetTextSize(tostring(v.table[tonumber(self[v.id])])).x - 2,TOP_MARGIN + (mainRow+i-1)*BUTTON_H + (BUTTON_H - hcFont.tall)/2,TEXT_COLOR,v.table[tonumber(self[v.id])],hcFont)
 				else
-					self._settings.visuals.button[v.id].value = drawManager:CreateText(drawManager.screenWidth - (SIDE_MARGIN + BUTTON_W) - drawManager:GetTextSize(tostring(self[v.id]),FONT_SIZE)[1] - 2,TOP_MARGIN + (mainRow+i-1)*BUTTON_H + (BUTTON_H - FONT_SIZE)/2,TEXT_COLOR,tostring(self[v.id]))
+					self._settings.visuals.button[v.id].value = drawMgr:CreateText(client.screenSize.x - (SIDE_MARGIN + BUTTON_W) - hcFont:GetTextSize(tostring(self[v.id])).x - 2,TOP_MARGIN + (mainRow+i-1)*BUTTON_H + (BUTTON_H - hcFont.tall)/2,TEXT_COLOR,tostring(self[v.id]),hcFont)
 				end
 				self._settings.visuals.button[v.id].value.visible = visibility
 			end
 		elseif self._settings.menuOpen and not state then
 			for i,v in ipairs(self._cfg) do
-				self._settings.visuals.button[v.id].bg1:Destroy()
 				self._settings.visuals.button[v.id].bg1 = nil
-				self._settings.visuals.button[v.id].bg2:Destroy()
 				self._settings.visuals.button[v.id].bg2 = nil
-				self._settings.visuals.button[v.id].bg3:Destroy()
 				self._settings.visuals.button[v.id].bg3 = nil
-				self._settings.visuals.button[v.id].border:Destroy()
 				self._settings.visuals.button[v.id].border = nil
-				self._settings.visuals.button[v.id].name:Destroy()
 				self._settings.visuals.button[v.id].name = nil
 				if self._settings.visuals.button[v.id].key then
-					self._settings.visuals.button[v.id].key:Destroy()
 					self._settings.visuals.button[v.id].key = nil
 				end
-				self._settings.visuals.button[v.id].value:Destroy()
 				self._settings.visuals.button[v.id].value = nil
+				collectgarbage("collect")
+
 			end
 		end
 		self._settings.menuOpen = state
@@ -690,13 +684,13 @@ function ConfigGUI:New(name)
 	    	local v= self._cfg[i]
 	    	if i > location then
 	    		self._cfg[i-1] = v
-				if v.show and self._settings.visuals.permaShow[v.id].name then
+				if v.show and self._settings.visuals.permaShow[v.id] then
 					self:LowerObject(self._settings.visuals.permaShow[v.id].inside,-BUTTON_H)
 					self:LowerObject(self._settings.visuals.permaShow[v.id].border,-BUTTON_H)
 					self:LowerObject(self._settings.visuals.permaShow[v.id].name,-BUTTON_H)
 					self:LowerObject(self._settings.visuals.permaShow[v.id].value,-BUTTON_H)
 				end
-				if  self._settings.menuOpen and self._settings.visuals.button[v.id].name then
+				if  self._settings.menuOpen and self._settings.visuals.button[v.id] then
 					self:LowerObject(self._settings.visuals.button[v.id].bg1,-BUTTON_H)
 					self:LowerObject(self._settings.visuals.button[v.id].bg2,-BUTTON_H)
 					self:LowerObject(self._settings.visuals.button[v.id].bg3,-BUTTON_H)
@@ -708,13 +702,15 @@ function ConfigGUI:New(name)
 			end
 	    end
 
-		self._cfg[size] = nil
+		table.remove(self._cfg, size)
+
+		collectgarbage("collect")
 	end
 
 	--Adds a parameter to the settings
 	function obj:AddParam(pId,pName,pType,pShow,pValue,pKey,_a,_b,_c)
 		assert(type(pId) == "string" and type(pName) == "string" and type(pType) == "number" and type(pShow) == "boolean", "Can't Add Parameter: wrong argument types (<string>, <string>, <pType>, <boolean> expected)")
-	    assert(string.find(pId,"[^%a%d]") == nil, "Can't Add Parameter:: Id should contain only char and number")
+	    assert(string.find(pId:gsub("_",""),"[^%a%d]") == nil, "Can't Add Parameter:: Id should contain only char, number and underscore")
 	    assert(self[pId] == nil, "Can't Add Parameter: Id should be unique, already existing "..pId)
     	local newParam = {id = pId, name = pName, type = pType, key = pKey, show = pShow}
 
@@ -734,6 +730,10 @@ function ConfigGUI:New(name)
 			newParam.table = _a
 	    end
 
+	    local menu = self._settings.menuOpen
+	    if menu then
+	    	self:OpenMenu(false)
+	    end
 		self[pId] = pValue
 		table.insert(self._cfg, newParam)
 
@@ -745,22 +745,22 @@ function ConfigGUI:New(name)
 	    	local startRow = self._settings.sR
 	    	local visibility = self._settings.visible
 	    	self._settings.visuals.permaShow[pId] = {}
-	    	self._settings.visuals.permaShow[pId].inside = drawManager:CreateRect(SIDE_MARGIN,TOP_MARGIN + (showRow + startRow)*BUTTON_H,3*BUTTON_W/2+self._settings.extention*BUTTON_W,BUTTON_H,BG_COLOR)
+	    	self._settings.visuals.permaShow[pId].inside = drawMgr:CreateRect(SIDE_MARGIN,TOP_MARGIN + (showRow + startRow)*BUTTON_H,3*BUTTON_W/2+self._settings.extention*BUTTON_W,BUTTON_H,BG_COLOR)
 	    	self._settings.visuals.permaShow[pId].inside.visible = visibility
-			self._settings.visuals.permaShow[pId].border = drawManager:CreateRect(SIDE_MARGIN,TOP_MARGIN + (showRow + startRow)*BUTTON_H,3*BUTTON_W/2+self._settings.extention*BUTTON_W,BUTTON_H,BORDER_COLOR,true)
+			self._settings.visuals.permaShow[pId].border = drawMgr:CreateRect(SIDE_MARGIN,TOP_MARGIN + (showRow + startRow)*BUTTON_H,3*BUTTON_W/2+self._settings.extention*BUTTON_W,BUTTON_H,BORDER_COLOR,true)
 			self._settings.visuals.permaShow[pId].border.visible = visibility
-			self._settings.visuals.permaShow[pId].name = drawManager:CreateText(SIDE_MARGIN + 2,TOP_MARGIN + (showRow + startRow)*BUTTON_H + (BUTTON_H - FONT_SIZE)/2,TEXT_COLOR,pName..":")
+			self._settings.visuals.permaShow[pId].name = drawMgr:CreateText(SIDE_MARGIN + 2,TOP_MARGIN + (showRow + startRow)*BUTTON_H + (BUTTON_H - hcFont.tall)/2,TEXT_COLOR,pName..":",hcFont)
 			self._settings.visuals.permaShow[pId].name.visible = visibility
 			if type(self[newParam.id]) == "boolean" then
 				if self[newParam.id] then
-					self._settings.visuals.permaShow[pId].value = drawManager:CreateText(SIDE_MARGIN + self._settings.extention*BUTTON_W + 3*BUTTON_W/2 - 2*FONT_SIZE/3 - 7,TOP_MARGIN + (showRow + startRow)*BUTTON_H + (BUTTON_H - FONT_SIZE)/2,0x009300FF,"ON")
+					self._settings.visuals.permaShow[pId].value = drawMgr:CreateText(SIDE_MARGIN + self._settings.extention*BUTTON_W + 3*BUTTON_W/2 - hcFont:GetTextSize("ON").x - 2,TOP_MARGIN + (showRow + startRow)*BUTTON_H + (BUTTON_H - hcFont.tall)/2,0x009300FF,"ON",hcFont)
 				else
-					self._settings.visuals.permaShow[pId].value = drawManager:CreateText(SIDE_MARGIN + self._settings.extention*BUTTON_W + 3*BUTTON_W/2 - FONT_SIZE - 7,TOP_MARGIN + (showRow + startRow)*BUTTON_H + (BUTTON_H - FONT_SIZE)/2,0x930000FF,"OFF")
+					self._settings.visuals.permaShow[pId].value = drawMgr:CreateText(SIDE_MARGIN + self._settings.extention*BUTTON_W + 3*BUTTON_W/2 - hcFont:GetTextSize("OFF").x - 2,TOP_MARGIN + (showRow + startRow)*BUTTON_H + (BUTTON_H - hcFont.tall)/2,0x930000FF,"OFF",hcFont)
 				end
 			elseif newParam.table then
-				self._settings.visuals.permaShow[pId].value = drawManager:CreateText(SIDE_MARGIN + self._settings.extention*BUTTON_W + 3*BUTTON_W/2 - drawManager:GetTextSize(tostring(newParam.table[tonumber(self[newParam.id])]),FONT_SIZE)[1] - 2,TOP_MARGIN + (showRow + startRow)*BUTTON_H + (BUTTON_H - FONT_SIZE)/2,TEXT_COLOR,newParam.table[tonumber(self[newParam.id])])
+				self._settings.visuals.permaShow[pId].value = drawMgr:CreateText(SIDE_MARGIN + self._settings.extention*BUTTON_W + 3*BUTTON_W/2 - hcFont:GetTextSize(tostring(newParam.table[tonumber(self[newParam.id])])).x - 2,TOP_MARGIN + (showRow + startRow)*BUTTON_H + (BUTTON_H - hcFont.tall)/2,TEXT_COLOR,newParam.table[tonumber(self[newParam.id])],hcFont)
 			else
-				self._settings.visuals.permaShow[pId].value = drawManager:CreateText(SIDE_MARGIN + self._settings.extention*BUTTON_W + 3*BUTTON_W/2 - drawManager:GetTextSize(tostring(self[newParam.id]),FONT_SIZE)[1] - 2,TOP_MARGIN + (showRow + startRow)*BUTTON_H + (BUTTON_H - FONT_SIZE)/2,TEXT_COLOR,tostring(self[newParam.id]))
+				self._settings.visuals.permaShow[pId].value = drawMgr:CreateText(SIDE_MARGIN + self._settings.extention*BUTTON_W + 3*BUTTON_W/2 - hcFont:GetTextSize(tostring(self[newParam.id])).x - 2,TOP_MARGIN + (showRow + startRow)*BUTTON_H + (BUTTON_H - hcFont.tall)/2,TEXT_COLOR,tostring(self[newParam.id]),hcFont)
 			end
 			self._settings.visuals.permaShow[pId].value.visible = visibility
 	    	self._settings.showCount = self._settings.showCount + 1
@@ -769,6 +769,10 @@ function ConfigGUI:New(name)
 		self:LoadCfg()
 		self:SaveCfg()
 		self:UpdateCurrent()
+
+	    if menu then
+	    	self:OpenMenu(true)
+	    end
 	end
 
 	function obj:Init()
@@ -780,11 +784,11 @@ function ConfigGUI:New(name)
 		self._settings.visuals.main = {}
 		self._settings.visuals.permaShow = {}
 		self._settings.visuals.button = {}
-		self._settings.visuals.main.inside = drawManager:CreateRect(drawManager.screenWidth - (SIDE_MARGIN + BUTTON_W),TOP_MARGIN + mainRow*BUTTON_H,BUTTON_W,BUTTON_H,BG_COLOR)
+		self._settings.visuals.main.inside = drawMgr:CreateRect(client.screenSize.x - (SIDE_MARGIN + BUTTON_W),TOP_MARGIN + mainRow*BUTTON_H,BUTTON_W,BUTTON_H,BG_COLOR)
 		self._settings.visuals.main.inside.visible = visibility
-		self._settings.visuals.main.border = drawManager:CreateRect(drawManager.screenWidth - (SIDE_MARGIN + BUTTON_W),TOP_MARGIN + mainRow*BUTTON_H,BUTTON_W,BUTTON_H,BORDER_COLOR,true)
+		self._settings.visuals.main.border = drawMgr:CreateRect(client.screenSize.x - (SIDE_MARGIN + BUTTON_W),TOP_MARGIN + mainRow*BUTTON_H,BUTTON_W,BUTTON_H,BORDER_COLOR,true)
 		self._settings.visuals.main.border.visible = visibility
-		self._settings.visuals.main.text = drawManager:CreateText(drawManager.screenWidth - (SIDE_MARGIN + BUTTON_W) + 2,TOP_MARGIN + mainRow*BUTTON_H + (BUTTON_H - FONT_SIZE)/2,TEXT_COLOR,self._settings.name,font)
+		self._settings.visuals.main.text = drawMgr:CreateText(client.screenSize.x - (SIDE_MARGIN + BUTTON_W) + 2,TOP_MARGIN + mainRow*BUTTON_H + (BUTTON_H - hcFont.tall)/2,TEXT_COLOR,self._settings.name,hcFont)
 		self._settings.visuals.main.text.visible = visibility
 	end
 
@@ -792,7 +796,7 @@ function ConfigGUI:New(name)
 
 		self:HighlightTick()
 
-		if GetTick() > self._settings.sleep then
+		if client.gameTime > self._settings.sleep then
 			local _scripts = ReadLines(CURRENT_FILE)
 			local _dirty = false
 
@@ -817,60 +821,55 @@ function ConfigGUI:New(name)
 
 			self:FindMainRow(_scripts)
 			self:FindShowRow(_scripts)
-			self._settings.sleep = GetTick() + UPDATE_CYCLE
+			self._settings.sleep = client.gameTime + UPDATE_CYCLE
 		end
 	end
 
 	function obj:Key(msg,code)
 		if not self._settings.visible then return end
-			dupcheck = not dupcheck
-			if dupcheck then return end
-			if IsChatOpen() then return end
-			if self._settings.keyChange then
-				if msg == KEY_DOWN then
-					self._cfg[self._settings.keyChange].key = code
-					self._settings.visuals.button[self._cfg[self._settings.keyChange].id].key:SetText(KeytoString(code))
-					self._settings.keyChange = nil
-					self:SaveCfg()
-					return
+		if client.chat then return end
+		if self._settings.keyChange then
+			if msg == KEY_DOWN then
+				self._cfg[self._settings.keyChange].key = code
+				self._settings.visuals.button[self._cfg[self._settings.keyChange].id].key.text = KeytoString(code)
+				self._settings.keyChange = nil
+				self:SaveCfg()
+				return
+			end
+		elseif msg == LBUTTON_DOWN or msg == RBUTTON_DOWN then
+			if not self._settings.menuOpen then
+				local mainRow = self._settings.mR
+				if mainRow and IsMouseOnRect(self._settings.visuals.main.inside) then
+					self:OpenMenu(true)
 				end
-			elseif msg == LBUTTON_DOWN or msg == RBUTTON_DOWN then
-				if not self._settings.menuOpen then
-					local mainRow = self._settings.mR
-					if mainRow and IsMouseOnRect(self._settings.visuals.main.inside) then
-						self:OpenMenu(true)
-					end
-				else
-					local mainRow = self._settings.mR
-					local match = false
-					for i,v in ipairs(self._cfg) do
-						if v.key and IsMouseOnRect(self._settings.visuals.button[v.id].bg2) then
-							self._settings.keyChange = i
-							self._settings.visuals.button[v.id].key:SetText("ASSIGN A KEY")
-							match = true
-						elseif v.type ~= SGC_TYPE_ONKEYDOWN and IsMouseOnRect(self._settings.visuals.button[v.id].bg3) then
-							match = true
-							local re = self:ParamKey(i,msg,code)
-							return re
-						end
-					end
-					if not match then
-						self:OpenMenu(false)
-						self._settings.menuOpen = false
-					end
-				end
-			elseif self._settings.keyChange == nil then
+			else
+				local mainRow = self._settings.mR
+				local match = false
 				for i,v in ipairs(self._cfg) do
-					self:ParamKey(i,msg,code)
+					if v.key and IsMouseOnRect(self._settings.visuals.button[v.id].bg2) then
+						self._settings.keyChange = i
+						self._settings.visuals.button[v.id].key.text = "ASSIGN A KEY"
+						match = true
+					elseif v.type ~= SGC_TYPE_ONKEYDOWN and IsMouseOnRect(self._settings.visuals.button[v.id].bg3) then
+						match = true
+						local re = self:ParamKey(i,msg,code)
+						return re
+					end
+				end
+				if not match then
+					self:OpenMenu(false)
+					self._settings.menuOpen = false
 				end
 			end
+		elseif self._settings.keyChange == nil then
+			for i,v in ipairs(self._cfg) do
+				self:ParamKey(i,msg,code)
+			end
 		end
+	end
 
 	globj = obj
 	globj:Init()
-
-	script:RegisterEvent(EVENT_KEY, globj.Key, globj)
-	script:RegisterEvent(EVENT_TICK, globj.Refresh, globj)
 	return globj
 end
 
@@ -926,9 +925,8 @@ end
 
 --Returns true if mouse is on given rectangle
 function IsMouseOnButton(x,y,h,w)
-	mx = engineClient.mouseScreenPosition[1]
-	my = engineClient.mouseScreenPosition[2]
-	return mx > x and mx <= x + w and my > y and my <= y + h
+	local m = client.mouseScreenPosition
+	return m.x > x and m.x <= x + w and m.y > y and m.y <= y + h
 end
 	
 function IsMouseOnRect(drawObj)
