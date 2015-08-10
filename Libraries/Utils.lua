@@ -2024,13 +2024,13 @@ function FindAngleBetween(first, second)
 	xAngle = math.deg(math.atan(math.abs(second.x - first.x)/math.abs(second.y - first.y)))
 	if first and second then
 		if first.x <= second.x and first.y >= second.y then
-			return 270 + xAngle
+			return 90 - xAngle
 		elseif first.x >= second.x and first.y >= second.y then
-			return	(90-xAngle) + 180
+			return xAngle + 90
 		elseif first.x >= second.x and first.y <= second.y then
-			return	90+xAngle
+			return 270 - xAngle
 		elseif first.x <= second.x and first.y <= second.y then
-			return	90 - xAngle
+			return xAngle + 270
 		end
 	end
 	return 0
