@@ -1884,10 +1884,10 @@ function LuaEntityNPC:DamageTaken(dmg,dmgType,source,throughBKB)
 
 		--Exception External Amplify: Undying: Flesh Golem: Plauge
 		--	Amplification is dynamic, related to distance to the flesh golem
-		if self:DoesHaveModifier("modifier_abaddon_borrowed_time_damage_redirect") then
-			reduceOther = reduceOther + 0.35
-		elseif self:DoesHaveModifier("modifier_kunkka_ghost_ship_damage_absorb") then
+		if self:DoesHaveModifier("modifier_kunkka_ghost_ship_damage_absorb") then
 			reduceOther = reduceOther + 0.5
+		elseif self:DoesHaveModifier("modifier_abaddon_borrowed_time_damage_redirect") then
+			reduceOther = reduceOther + 0.35
 		end
 		
 		--Exception External Amplify: Bloodseeker: Blood Rage
